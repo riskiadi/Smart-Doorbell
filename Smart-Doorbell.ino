@@ -1,12 +1,10 @@
 #include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>
+#include <WiFiClientSecure.h> 
 #include <FirebaseArduino.h>
 #include <ESP8266HTTPClient.h>
 #include "Neotimer.h"
 #include "PinDefine.h"
-
-#include <ESP8266WiFiMulti.h>
-#include <WiFiClientSecure.h> 
-
 
 //Define
 #define FIREBASE_HOST "manyaran-sistem.firebaseio.com"
@@ -18,6 +16,7 @@
 
 int httpCode = 0;
 int fcmHttpCode = 0;
+bool isSend = false;
 BearSSL::WiFiClientSecure client;
 HTTPClient http;
 Neotimer notificationDelay;
@@ -32,6 +31,10 @@ void setup() {
 
   //Initiate Firebase
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+
+   client.setInsecure();
+   client.setTimeout(10000);
+   client.connect("fcm.googleapis.com", 443); 
   
 }
 
@@ -40,11 +43,15 @@ void loop() {
   Serial.println(digitalRead(PIN_TOUCH));
   if(digitalRead(PIN_TOUCH) == 1){
     Firebase.setBool("doorbell/isOn", true);
-    if(notificationDelay.repeat()){
-      sendNotification();
-    }
+    isSend = true;
   }else{
     Firebase.setBool("doorbell/isOn", false);
+    if(isSend){
+      isSend = false;
+      sendNotification();
+//      if(notificationDelay.repeat()){
+//      }
+    }
   }
   delay(10);
   
@@ -54,10 +61,6 @@ void loop() {
 
 
 void sendNotification(){
-
- client.setInsecure();
- client.setTimeout(15000);
- client.connect("fcm.googleapis.com", 443); 
  //Uncoment for can retry if failed to connect
 // int retries = 6;
 // while(!client.connect("fcm.googleapis.com", 443) && (retries-- > 0)) {
@@ -66,6 +69,10 @@ void sendNotification(){
 // }
  if(!client.connected()) {
     Serial.println("Failed to connect using insecure client, check internet connection or try to use fingerprint..");
+   client.setInsecure();
+   client.setTimeout(10000);
+   client.connect("fcm.googleapis.com", 443);
+   sendNotification();
  }else{
     Serial.println("[Success to connect]");
     Serial.println("--------");
@@ -80,11 +87,11 @@ void sendNotification(){
     Serial.print("Post request completed, ");
     Serial.print("status code: ");
     Serial.println(fcmHttpCode);
-    http.end();
+//    http.end();
     Serial.println("--------");
  }
 
-  client.stop();
+//  client.stop();
 
 }
 
