@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "12045318817",
+    "firebase_url": "https://manyaran-sistem.firebaseio.com",
+    "project_id": "manyaran-sistem",
+    "storage_bucket": "manyaran-sistem.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:12045318817:android:57a62257471c4fd654cee0",
+        "android_client_info": {
+          "package_name": "com.alkalynx.manyaran_system"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "12045318817-nfcktp52c14l6ds8fiei0lr8827evsp7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alkalynx.manyaran_system",
+            "certificate_hash": "83e87ca723c89cb568b211c07be227542dd83708"
+          }
+        },
+        {
+          "client_id": "12045318817-sheu5i675fv5hhk07d24gs4mc4g5v1mi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAb_8wXQiswMMFd4rrGiDcDOX-ckvd6q2w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "12045318817-sheu5i675fv5hhk07d24gs4mc4g5v1mi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
