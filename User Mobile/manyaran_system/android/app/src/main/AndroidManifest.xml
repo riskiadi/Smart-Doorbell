@@ -7,15 +7,16 @@
          FlutterApplication and put your custom class here. -->
 
 <!--    android:name="io.flutter.app.FlutterApplication"-->
+<!--    android:name=".Application"-->
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
 
 
     <application
-        android:name=".Application"
-        android:label="manyaran_system"
-        android:icon="@mipmap/ic_launcher">
+        android:name="io.flutter.app.FlutterApplication"
+        android:label="Manyaran System"
+        android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

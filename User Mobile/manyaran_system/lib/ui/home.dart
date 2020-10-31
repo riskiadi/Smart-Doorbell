@@ -7,13 +7,14 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:manyaran_system/repository/firebase_database.dart';
 import 'package:time_formatter/time_formatter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
+
+FirebaseDatabaseRepository _firebaseDatabaseRepository = FirebaseDatabaseRepository();
 
 class HomePage extends StatefulWidget {
   @override
@@ -22,52 +23,48 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  StreamSubscription visitorSubscription;
+
+
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isPressed = false;
-
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  AndroidInitializationSettings androidInitializationSettings;
-  IOSInitializationSettings iosInitializationSettings;
-  InitializationSettings initializationSettings;
-  AndroidNotificationDetails androidNotificationDetails;
-  IOSNotificationDetails iosNotificationDetails;
-  NotificationDetails notificationDetails;
-  FirebaseDatabaseRepository _firebaseDatabaseRepository = FirebaseDatabaseRepository();
-
-  StreamSubscription visitorSubscription;
 
   @override
   void initState() {
 
-    visitorSubscription = FirebaseDatabase.instance.reference().child('visitors').onChildChanged.listen((event) {
-      print("DIUBAH");
-      setState(() {});
-    });
-
-    visitorSubscription = FirebaseDatabase.instance.reference().child('visitors').onChildAdded.listen((event) {
-      print("DITAMBAHKAN");
-      setState(() {});
-    });
-
-    visitorSubscription = FirebaseDatabase.instance.reference().child('visitors').onChildRemoved.listen((event) {
-      print("DIHAPUS");
-      setState(() {});
-    });
-
-    initialize();
-
-    FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
     _firebaseMessaging.subscribeToTopic('Doorbell');
     _firebaseMessaging.configure(onMessage: (Map<String, dynamic> message) {
       print("onMessage: $message");
       return null;
     }, onResume: (Map<String, dynamic> message) {
       print("onResume: $message");
+      openCCTV();
       return null;
     }, onLaunch: (Map<String, dynamic> message) {
       print("onLaunch: $message");
+      openCCTV();
       return null;
     });
+
+    _firebaseMessaging.requestNotificationPermissions( const IosNotificationSettings(sound: true, badge: true, alert: true));
+    _firebaseMessaging.onIosSettingsRegistered.listen((IosNotificationSettings settings) {
+      print("Settings registered: $settings");
+    });
+
+    visitorSubscription = FirebaseDatabase.instance.reference().child('visitors').onChildChanged.listen((event) {
+      print("DIUBAH");
+      setState(() {});
+    });
+    visitorSubscription = FirebaseDatabase.instance.reference().child('visitors').onChildAdded.listen((event) {
+      print("DITAMBAHKAN");
+      setState(() {});
+    });
+    visitorSubscription = FirebaseDatabase.instance.reference().child('visitors').onChildRemoved.listen((event) {
+      print("DIHAPUS");
+      setState(() {});
+    });
+
     super.initState();
   }
 
@@ -87,6 +84,7 @@ class _HomePageState extends State<HomePage> {
           floatingActionButton: floatingButtonCustom(context),
           body: SingleChildScrollView(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 HeaderWidget(),
                 Container(
@@ -97,47 +95,25 @@ class _HomePageState extends State<HomePage> {
                       color: const Color(0xFFdfe3e5),
                   ),
                 ),
-                FlatButton(onPressed: (){_firebaseDatabaseRepository.addVisitor();}, child: Text("Dummy Visitor")),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+
+                // FlatButton(onPressed: (){_firebaseDatabaseRepository.addVisitor();}, child: Text("Dummy Visitor")),
+
+                Column(
                   children: [
-                    Icon(Icons.emoji_people_sharp, color: Colors.black.withOpacity(0.7),),
-                    SizedBox(width: 10),
-                    Text("Home Visitors", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300, color: Colors.black.withOpacity(0.7)),),
+                    Text("Home Visitors", style: TextStyle(letterSpacing: 2,fontSize: 15, fontWeight: FontWeight.w300, color: Colors.black.withOpacity(0.7)),),
+                    SizedBox(height: 5),
+                    Container(width: 30, color: Colors.black.withOpacity(0.4), height: 0.8,),
+                    SizedBox(height: 15),
                   ],
                 ),
-                SizedBox(height: 10),
+
                 FutureBuilder(
                   future: _firebaseDatabaseRepository.getVisitors(),
                   builder: (context, AsyncSnapshot snapshot) {
+
                     if(snapshot.hasData){
-
-                      DateTime dt = DateTime.now();
-
-                      DataSnapshot dataSnapshot = snapshot.data;
-                      if(dataSnapshot.value==null) return emptyVisitorState();
-                      Map<dynamic, dynamic> visitors = dataSnapshot.value;
-                      List<int> visitorLog = List();
-                      visitors.forEach((key, value) {
-                        int unixTime = visitors[key]["date"];
-                        visitorLog.add(unixTime);
-
-                        //COMPARE VISITOR TODAY
-                        if(
-                        dt.day == DateTime.fromMillisecondsSinceEpoch(visitors[key]["date"]).day &&
-                            dt.month == DateTime.fromMillisecondsSinceEpoch(visitors[key]["date"]).month &&
-                            dt.year == DateTime.fromMillisecondsSinceEpoch(visitors[key]["date"]).year
-                        ){
-                          print("VISITOR EQUAL NOW = 1");
-                        }else{
-                          print("VISITOR EQUAL NOW = 0");
-                        }
-
-
-                      });
-                      visitorLog.sort((a, b){
-                        return b.compareTo(a);
-                      });
+                      List visitorLog = snapshot.data;
+                      if(visitorLog.length<=0) return emptyVisitorState();
                       return ListView.builder(
                         shrinkWrap: true,
                         physics: ScrollPhysics(),
@@ -175,7 +151,6 @@ class _HomePageState extends State<HomePage> {
         });
       },
       onLongPressUp: () {
-        vibrateDevice();
         _firebaseDatabaseRepository.setAlarmOff();
         setState(() {
           _isPressed = false;
@@ -222,63 +197,15 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Column emptyVisitorState() {
-    return Column(
-      children: [
-        Icon(
-          Icons.sticky_note_2_outlined,
-          size: 30,
-          color: Colors.black.withOpacity(0.5),
-        ),
-        SizedBox(height: 10),
-        Text("Visitor log is empty.", style: TextStyle(color: Colors.black.withOpacity(0.5)),)
-      ],
-    );
-  }
-
-  void initialize() async {
-    androidInitializationSettings = AndroidInitializationSettings('app_icon');
-    iosInitializationSettings = IOSInitializationSettings(onDidReceiveLocalNotification: onDidReceiveLocalNotification);
-    initializationSettings = InitializationSettings(android: androidInitializationSettings, iOS: iosInitializationSettings);
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings,onSelectNotification: onSelectNotification);
-    androidNotificationDetails = AndroidNotificationDetails(
-        'manyaran_id', 'Manyaran System', 'Manyaran System Notification',
-        priority: Priority.high,
-        importance: Importance.max,
-        sound: RawResourceAndroidNotificationSound('doorbell_sound'),
-        playSound: true);
-    iosNotificationDetails = IOSNotificationDetails();
-    notificationDetails = NotificationDetails(
-        android: androidNotificationDetails, iOS: iosNotificationDetails);
-
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        .createNotificationChannel(AndroidNotificationChannel(
-            'manyaran_id', 'Manyaran System', 'Manyaran System Notification',
-            importance: Importance.max,
-            sound: RawResourceAndroidNotificationSound('doorbell_sound'),
-            playSound: true));
-
-    //Show Notifiation Popup
-    // await flutterLocalNotificationsPlugin.show(0, "Local Notification", "this is local notification", notificationDetails);
-  }
-
-  Future onSelectNotification(String payload) {
-    if (payload != null) {
-      print(payload);
-    }
-  }
-
-  Future onDidReceiveLocalNotification(int id, String title, String body, String payload) {
-    return showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(body),
-        );
-      },
+  Widget emptyVisitorState() {
+    return Container(
+      height: MediaQuery.of(context).size.height/1.5,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text("You have no visitors this month.", style: TextStyle(color: Colors.black.withOpacity(0.3)),)
+        ],
+      ),
     );
   }
 
@@ -292,6 +219,7 @@ void vibrateDevice() async {
 }
 
 class HeaderWidget extends StatelessWidget {
+
   const HeaderWidget({
     Key key,
   }) : super(key: key);
@@ -306,10 +234,7 @@ class HeaderWidget extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Smart Doorbell",
-                style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600),
-              ),
+              Text("Smart Doorbell", style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600)),
               SizedBox(height: 7),
               Row(
                 children: [
@@ -318,10 +243,39 @@ class HeaderWidget extends StatelessWidget {
                     size: 15,
                   ),
                   SizedBox(width: 5),
-                  Text(
-                    "You have 0 visitor today.",
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w300),
-                  ),
+                  FutureBuilder(
+                    future: _firebaseDatabaseRepository.getVisitorToday(),
+                    builder: (context, AsyncSnapshot snapshot) {
+                      return RichText(
+                        text: TextSpan(
+                            text: "You have ",
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w300,
+                              color: Colors.black
+                            ),
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: snapshot.data==null ? "-" : snapshot.data.toString(),
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black,
+                              ),
+                            ),
+                            TextSpan(
+                              text: " visitor today.",
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w300,
+                                  color: Colors.black
+                              ),
+                            ),
+                          ]
+                        ),
+                      );
+                    },
+                  )
                 ],
               ),
             ],
@@ -348,12 +302,8 @@ class HeaderWidget extends StatelessWidget {
                   )
                 ],
               ),
-              onPressed: () async {
-                if(await DeviceApps.isAppInstalled('com.macrovideo.v380')!=true){
-                  await launch("https://play.google.com/store/apps/details?id=com.macrovideo.v380");
-                }else{
-                  DeviceApps.openApp('com.macrovideo.v380');
-                }
+              onPressed: () {
+                openCCTV();
               },
             ),
             decoration: BoxDecoration(
@@ -409,5 +359,14 @@ class visitorListWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+Future<void> openCCTV() async {
+  if (await DeviceApps.isAppInstalled('com.macrovideo.v380') != true) {
+    await launch(
+        "https://play.google.com/store/apps/details?id=com.macrovideo.v380");
+  } else {
+    DeviceApps.openApp('com.macrovideo.v380');
   }
 }
