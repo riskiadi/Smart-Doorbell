@@ -1,10 +1,14 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <WiFiClientSecure.h> 
-#include <FirebaseArduino.h>
+//#include <FirebaseArduino.h>
+#include <FirebaseESP8266.h>
 #include <ESP8266HTTPClient.h>
 #include "Neotimer.h"
 #include "PinDefine.h"
+#include <NTPClient.h>
+#include <time.h>
+#include <WiFiUdp.h>
 
 //Define
 #define FIREBASE_HOST "manyaran-sistem.firebaseio.com"
@@ -13,18 +17,29 @@
 #define WIFI_PASSWORD "qwerty33"
 #define PIN_BUZZER D6
 #define PIN_TOUCH D8
+#define PIN_LED D1
+
+
+BearSSL::WiFiClientSecure client;
+HTTPClient http;
+FirebaseData firebaseData;
+FirebaseJson json;
+time_t rawtime;
+struct tm * ti;
+Neotimer neoTimer = Neotimer(7000); // 7 second timer
+
+// Define NTP Client to get time
+const long utcOffsetInSeconds = 3600*7; // Time offset GMT+7 in UTC
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "id.pool.ntp.org", utcOffsetInSeconds);
 
 int httpCode = 0;
 int fcmHttpCode = 0;
 bool isSend = false;
-BearSSL::WiFiClientSecure client;
-HTTPClient http;
-Neotimer notificationDelay;
 
 void setup() {
   Serial.begin(9600);
   delay(10);
-  notificationDelay.set(4000);
 
   //Initiate Wifi
   wifiInitialization();
@@ -32,41 +47,48 @@ void setup() {
   //Initiate Firebase
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
 
-   client.setInsecure();
-   client.setTimeout(10000);
-   client.connect("fcm.googleapis.com", 443); 
+  //Get NTP time
+  timeClient.begin();
   
+  //fcm client
+  client.setInsecure();
+  client.setTimeout(10000);
+  client.connect("fcm.googleapis.com", 443); 
+
+  pinMode(PIN_LED, OUTPUT);
+  digitalWrite(PIN_LED, HIGH);
+
+  neoTimer.start();
+
 }
 
 void loop() {
 
+  //update epoch time
+  timeClient.update();
+
   Serial.println(digitalRead(PIN_TOUCH));
   if(digitalRead(PIN_TOUCH) == 1){
-    Firebase.setBool("doorbell/isOn", true);
+    Firebase.setBool(firebaseData, "doorbell/isOn", true);
     isSend = true;
   }else{
-    Firebase.setBool("doorbell/isOn", false);
+    Firebase.setBool(firebaseData, "doorbell/isOn", false);
     if(isSend){
       isSend = false;
-      sendNotification();
-//      if(notificationDelay.repeat()){
-//      }
+      if(neoTimer.done()){
+        neoTimer.stop();
+        sendNotification();
+      }
     }
   }
+  
   delay(10);
   
 }
 
 
 
-
 void sendNotification(){
- //Uncoment for can retry if failed to connect
-// int retries = 6;
-// while(!client.connect("fcm.googleapis.com", 443) && (retries-- > 0)) {
-//   Serial.print(".");
-//   delay(1000);
-// }
  if(!client.connected()) {
     Serial.println("Failed to connect using insecure client, check internet connection or try to use fingerprint..");
    client.setInsecure();
@@ -87,12 +109,19 @@ void sendNotification(){
     Serial.print("Post request completed, ");
     Serial.print("status code: ");
     Serial.println(fcmHttpCode);
-//    http.end();
     Serial.println("--------");
+    //Send visitor history
+
+    rawtime = timeClient.getEpochTime();
+    ti = localtime (&rawtime);
+    int month = (ti->tm_mon + 1) < 10 ? 0 + (ti->tm_mon + 1) : (ti->tm_mon + 1);
+    int year = ti->tm_year + 1900;
+    
+    json.set("date", (float)timeClient.getEpochTime());
+    Firebase.pushJSON(firebaseData, "visitors/" + (String)year + "/" + (String)month , json);
+    
+    neoTimer.start();
  }
-
-//  client.stop();
-
 }
 
 
