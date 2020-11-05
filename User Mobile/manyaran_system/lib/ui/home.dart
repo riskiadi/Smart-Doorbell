@@ -28,7 +28,6 @@ class _HomePageState extends State<HomePage> {
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   StreamSubscription visitorSubscription;
 
-
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isPressed = false;
 
@@ -76,6 +75,84 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  Widget floatingButtonCustom(BuildContext context) {
+    return GestureDetector(
+      onTap: (){
+        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Press hold to ring a bell"),));
+      },
+      onLongPress: (){
+        vibrateDevice();
+        _firebaseDatabaseRepository.setAlarmOn();
+        setState(() {
+          _isPressed = true;
+        });
+      },
+      onLongPressUp: () {
+        _firebaseDatabaseRepository.setAlarmOff();
+        setState(() {
+          _isPressed = false;
+        });
+      },
+      child: Container(
+        width: MediaQuery.of(context).size.width / 2,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            gradient: LinearGradient(
+                begin: Alignment(-1.0, -2.0),
+                end: Alignment(1.0, 2.0),
+                colors: <Color>[
+                  Color(0xff2296f3),
+                  Color(0xff06b3fa),
+                  Color(0xff1c9df5)
+                ]),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                  color: Color(0xff2296f3).withOpacity(0.7), blurRadius: 10
+              )
+            ]
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.notifications_active_rounded,
+              color: _isPressed ? Colors.black.withOpacity(0.5) : Colors.white,
+            ),
+            SizedBox(width: 14),
+            Text(
+              "Press and Hold",
+              style: TextStyle(
+                  color: _isPressed ? Colors.black.withOpacity(0.5) : Colors.white,
+                  letterSpacing: 1,
+                  fontWeight: FontWeight.w300
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget emptyVisitorState() {
+    return Container(
+      height: MediaQuery.of(context).size.height/1.9,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text("You have no visitors this month.", style: TextStyle(color: Colors.black.withOpacity(0.3)),)
+        ],
+      ),
+    );
+  }
+
+  void vibrateDevice() async {
+    if(await Vibration.hasVibrator()){
+      Vibration.vibrate();
+      print('Vibrate');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -86,7 +163,6 @@ class _HomePageState extends State<HomePage> {
           floatingActionButton: floatingButtonCustom(context),
           body: SingleChildScrollView(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 HeaderWidget(),
                 Container(
@@ -102,109 +178,7 @@ class _HomePageState extends State<HomePage> {
                   builder: (context, snapshot) {
                     if(snapshot.hasData){
                       Weather weather = snapshot.data;
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          //Temperature
-                          Container(
-                              width: MediaQuery.of(context).size.width/2.5,
-                              child: Container(
-                                height: 90,
-                                child: Stack(
-                                  children: [
-                                    Positioned(
-                                      child: Image.network(
-                                        "http://openweathermap.org/img/wn/${weather.weatherIcon}@2x.png",
-                                        width: 80,
-                                        fit: BoxFit.cover,
-                                      ),
-                                      top: 0,
-                                      bottom: 25,
-                                      left: 90,
-                                    ),
-                                    Align(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Container(
-                                            child: Center(
-                                              child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    weather.temperature.celsius.round().toString(),
-                                                    style: TextStyle(
-                                                        fontSize: 30,
-                                                        fontWeight: FontWeight.w600
-                                                    ),
-                                                  ),
-                                                  SizedBox(width: 2),
-                                                  Container(
-                                                    width: 12,
-                                                    height: 12,
-                                                    padding: const EdgeInsets.all(3),
-                                                    decoration: BoxDecoration(
-                                                        color: Colors.black,
-                                                        borderRadius: BorderRadius.circular(30)
-                                                    ),
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                          color: Color(0xFFF6F8FA),
-                                                          borderRadius: BorderRadius.circular(30)
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Text(
-                                            weather.areaName,
-                                            style: TextStyle(
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      alignment: Alignment.center,
-                                    ),
-                                  ],
-                                ),
-                              )
-                          ),
-                          //status
-                          Container(
-                              width: MediaQuery.of(context).size.width/2.5,
-                              child: Container(
-                                height: 90,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      child: Center(
-                                        child: Text(
-                                          "${ReCase(weather.weatherDescription).sentenceCase}",
-                                          style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      "Status",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                          ),
-                        ],
-                      );
+                      return WeatherWidget(weather: weather);
                     }else{
                       return Container();
                     }
@@ -266,77 +240,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget floatingButtonCustom(BuildContext context) {
-    return GestureDetector(
-      onTap: (){
-        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Press hold to ring a bell"),));
-      },
-      onLongPress: (){
-        vibrateDevice();
-        _firebaseDatabaseRepository.setAlarmOn();
-        setState(() {
-          _isPressed = true;
-        });
-      },
-      onLongPressUp: () {
-        _firebaseDatabaseRepository.setAlarmOff();
-        setState(() {
-          _isPressed = false;
-        });
-      },
-      child: Container(
-        width: MediaQuery.of(context).size.width / 2,
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
-          gradient: LinearGradient(
-              begin: Alignment(-1.0, -2.0),
-              end: Alignment(1.0, 2.0),
-              colors: <Color>[
-                Color(0xff2296f3),
-                Color(0xff06b3fa),
-                Color(0xff1c9df5)
-              ]),
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: Color(0xff2296f3).withOpacity(0.7), blurRadius: 10
-            )
-          ]
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.notifications_active_rounded,
-              color: _isPressed ? Colors.black.withOpacity(0.5) : Colors.white,
-            ),
-            SizedBox(width: 14),
-            Text(
-              "Press and Hold",
-              style: TextStyle(
-                  color: _isPressed ? Colors.black.withOpacity(0.5) : Colors.white,
-                  letterSpacing: 1,
-                  fontWeight: FontWeight.w300
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget emptyVisitorState() {
-    return Container(
-      height: MediaQuery.of(context).size.height/1.9,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text("You have no visitors this month.", style: TextStyle(color: Colors.black.withOpacity(0.3)),)
-        ],
-      ),
-    );
-  }
-
 }
 
 Future<void> openCCTV() async {
@@ -347,14 +250,6 @@ Future<void> openCCTV() async {
     DeviceApps.openApp('com.macrovideo.v380');
   }
 }
-
-void vibrateDevice() async {
-  if(await Vibration.hasVibrator()){
-    Vibration.vibrate();
-    print('Vibrate');
-  }
-}
-
 
 class HeaderWidget extends StatelessWidget {
 
@@ -452,6 +347,122 @@ class HeaderWidget extends StatelessWidget {
           )
         ],
       ),
+    );
+  }
+}
+
+class WeatherWidget extends StatelessWidget {
+  final Weather weather;
+
+  const WeatherWidget({
+    Key key,
+    @required this.weather,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        //Temperature
+        Container(
+            width: MediaQuery.of(context).size.width/2.5,
+            child: Container(
+              height: 90,
+              child: Stack(
+                children: [
+                  Positioned(
+                    child: Image.network(
+                      "http://openweathermap.org/img/wn/${weather.weatherIcon}@2x.png",
+                      width: 80,
+                      fit: BoxFit.cover,
+                    ),
+                    top: 0,
+                    bottom: 25,
+                    left: MediaQuery.of(context).size.width/4.5,
+                  ),
+                  Align(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          child: Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  weather.temperature.celsius.round().toString(),
+                                  style: TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.w600
+                                  ),
+                                ),
+                                SizedBox(width: 2),
+                                Container(
+                                  width: 11,
+                                  height: 11,
+                                  padding: const EdgeInsets.all(2.5),
+                                  decoration: BoxDecoration(
+                                      color: Colors.black,
+                                      borderRadius: BorderRadius.circular(30)
+                                  ),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                        color: Color(0xFFF6F8FA),
+                                        borderRadius: BorderRadius.circular(30)
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Text(
+                          weather.areaName,
+                          style: TextStyle(
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                  ),
+                ],
+              ),
+            )
+        ),
+        //status
+        Container(
+            width: MediaQuery.of(context).size.width/2.5,
+            child: Container(
+              height: 90,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    child: Center(
+                      child: Text(
+                        "${ReCase(weather.weatherDescription).sentenceCase}",
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    "Status",
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            )
+        ),
+      ],
     );
   }
 }
