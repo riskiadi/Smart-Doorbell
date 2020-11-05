@@ -10,9 +10,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:manyaran_system/repository/firebase_database.dart';
+import 'package:recase/recase.dart';
 import 'package:time_formatter/time_formatter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
+import 'package:weather/weather.dart';
 
 FirebaseDatabaseRepository _firebaseDatabaseRepository = FirebaseDatabaseRepository();
 
@@ -88,46 +90,174 @@ class _HomePageState extends State<HomePage> {
               children: [
                 HeaderWidget(),
                 Container(
-                  margin: const EdgeInsets.only(right: 16, left: 16, bottom: 20),
+                  margin: const EdgeInsets.only(right: 16, left: 16, bottom: 10),
                   width: double.infinity,
                   height: 0.7,
                   decoration: BoxDecoration(
                       color: const Color(0xFFdfe3e5),
                   ),
                 ),
-
-                // FlatButton(onPressed: (){_firebaseDatabaseRepository.addVisitor();}, child: Text("Dummy Visitor")),
-
-                Column(
-                  children: [
-                    Text("Home Visitors", style: TextStyle(letterSpacing: 2,fontSize: 15, fontWeight: FontWeight.w300, color: Colors.black.withOpacity(0.7)),),
-                    SizedBox(height: 5),
-                    Container(width: 30, color: Colors.black.withOpacity(0.4), height: 0.8,),
-                    SizedBox(height: 15),
-                  ],
+                FutureBuilder(
+                  future: _firebaseDatabaseRepository.getWeather(),
+                  builder: (context, snapshot) {
+                    if(snapshot.hasData){
+                      Weather weather = snapshot.data;
+                      return Container(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            //Temperature
+                            Container(
+                                width: MediaQuery.of(context).size.width/2.5,
+                                child: Container(
+                                  height: 90,
+                                  child: Stack(
+                                    children: [
+                                      Positioned(
+                                        child: Image.network(
+                                          "http://openweathermap.org/img/wn/10d@2x.png",
+                                          width: 80,
+                                          fit: BoxFit.cover,
+                                        ),
+                                        top: 0,
+                                        bottom: 25,
+                                        left: 90,
+                                      ),
+                                      Align(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Container(
+                                              child: Center(
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      weather.temperature.celsius.round().toString(),
+                                                      style: TextStyle(
+                                                          fontSize: 30,
+                                                          fontWeight: FontWeight.w600
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 2),
+                                                    Container(
+                                                      width: 12,
+                                                      height: 12,
+                                                      padding: const EdgeInsets.all(3),
+                                                      decoration: BoxDecoration(
+                                                          color: Colors.black,
+                                                          borderRadius: BorderRadius.circular(30)
+                                                      ),
+                                                      child: Container(
+                                                        decoration: BoxDecoration(
+                                                            color: Color(0xFFF6F8FA),
+                                                            borderRadius: BorderRadius.circular(30)
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            Text(
+                                              weather.areaName,
+                                              style: TextStyle(
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        alignment: Alignment.center,
+                                      ),
+                                    ],
+                                  ),
+                                )
+                            ),
+                            //status
+                            Container(
+                                width: MediaQuery.of(context).size.width/2.5,
+                                child: Container(
+                                  height: 90,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        child: Center(
+                                          child: Text(
+                                            "${ReCase(weather.weatherDescription).sentenceCase}",
+                                            style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        "Status",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                            ),
+                          ],
+                        ),
+                      );
+                    }else{
+                      return Container();
+                    }
+                  },
                 ),
-
+                SizedBox(height: 20),
                 FutureBuilder(
                   future: _firebaseDatabaseRepository.getVisitors(),
                   builder: (context, AsyncSnapshot snapshot) {
-
                     if(snapshot.hasData){
                       List visitorLog = snapshot.data;
                       if(visitorLog.length<=0) return emptyVisitorState();
-                      return ListView.builder(
-                        shrinkWrap: true,
-                        physics: ScrollPhysics(),
-                        itemCount: visitorLog.length,
-                        itemBuilder: (context, index) {
-                          return  Column(
-                            children: [
-                              visitorListWidget(unixTime: visitorLog[index])
-                            ],
-                          );
-                        },
+                      return Container(
+                        width: MediaQuery.of(context).size.width/1.3,
+                        padding: const EdgeInsets.only(bottom: 5),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(14),
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: 10,
+                                spreadRadius: 10
+                            )
+                          ]
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              margin: const EdgeInsets.only(left: 15, right: 15, top: 12, bottom: 10),
+                              child: Text("Home Visitors", style: TextStyle(fontSize: 15, color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500),),
+                            ),
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: ScrollPhysics(),
+                              itemCount: visitorLog.length,
+                              itemBuilder: (context, index) {
+                                return  Column(
+                                  children: [
+                                    visitorListWidget(unixTime: visitorLog[index]),
+                                    (index+1) == visitorLog.length ? Container() : Container(height: 0.15, color: Colors.black,),
+                                  ],
+                                );
+                              },
+                            ),
+                          ],
+                        )
                       );
                     }else{
-                      return Text("LOADING...");
+                      return CircularProgressIndicator();
                     }
                   },
                 ),
@@ -199,7 +329,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget emptyVisitorState() {
     return Container(
-      height: MediaQuery.of(context).size.height/1.5,
+      height: MediaQuery.of(context).size.height/1.9,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -211,12 +341,22 @@ class _HomePageState extends State<HomePage> {
 
 }
 
+Future<void> openCCTV() async {
+  if (await DeviceApps.isAppInstalled('com.macrovideo.v380') != true) {
+    await launch(
+        "https://play.google.com/store/apps/details?id=com.macrovideo.v380");
+  } else {
+    DeviceApps.openApp('com.macrovideo.v380');
+  }
+}
+
 void vibrateDevice() async {
   if(await Vibration.hasVibrator()){
     Vibration.vibrate();
     print('Vibrate');
   }
 }
+
 
 class HeaderWidget extends StatelessWidget {
 
@@ -330,16 +470,8 @@ class visitorListWidget extends StatelessWidget {
     DateTime _date = DateTime.fromMillisecondsSinceEpoch(unixTime);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      margin: const EdgeInsets.symmetric(vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
       width: MediaQuery.of(context).size.width/1.3,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: <BoxShadow>[
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)
-        ],
-      ),
       child: IntrinsicHeight(
         child: Row(
           children: [
@@ -362,11 +494,3 @@ class visitorListWidget extends StatelessWidget {
   }
 }
 
-Future<void> openCCTV() async {
-  if (await DeviceApps.isAppInstalled('com.macrovideo.v380') != true) {
-    await launch(
-        "https://play.google.com/store/apps/details?id=com.macrovideo.v380");
-  } else {
-    DeviceApps.openApp('com.macrovideo.v380');
-  }
-}

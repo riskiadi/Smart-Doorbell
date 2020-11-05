@@ -1,4 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
+import 'package:weather/weather.dart';
 
 class FirebaseDatabaseRepository{
 
@@ -11,13 +12,16 @@ class FirebaseDatabaseRepository{
 
   Future getVisitorToday() async{
     int visitorCounter = 0;
+    int unixTime;
     DateTime dateTime = DateTime.now();
-    DataSnapshot dataSnapshot = await databaseReference.child('visitors').once();
-    Map<dynamic, dynamic> visitors = dataSnapshot.value;
+    Map<dynamic, dynamic> visitors;
+    DataSnapshot dataSnapshot = await databaseReference.child('visitors').child(dateTime.year.toString()).child(dateTime.month.toString()).once();
+    visitors = dataSnapshot.value;
     visitors.forEach((key, value) {
-      if (dateTime.day == DateTime.fromMillisecondsSinceEpoch(visitors[key]["date"]).day &&
-          dateTime.month == DateTime.fromMillisecondsSinceEpoch(visitors[key]["date"]) .month &&
-          dateTime.year == DateTime.fromMillisecondsSinceEpoch(visitors[key]["date"]).year){
+      unixTime = visitors[key]["date"] * 1000;
+      if (dateTime.day == DateTime.fromMillisecondsSinceEpoch(unixTime).day &&
+          dateTime.month == DateTime.fromMillisecondsSinceEpoch(unixTime) .month &&
+          dateTime.year == DateTime.fromMillisecondsSinceEpoch(unixTime).year){
         visitorCounter++;
       }
     });
@@ -25,14 +29,16 @@ class FirebaseDatabaseRepository{
   }
 
   Future getVisitors() async{
+    int unixTime;
     DateTime dateTime = DateTime.now();
-    DataSnapshot dataSnapshot = await databaseReference.child('visitors').once();
-    Map<dynamic, dynamic> visitors = dataSnapshot.value;
     List<int> visitorLog = List();
+    Map<dynamic, dynamic> visitors;
+    DataSnapshot dataSnapshot = await databaseReference.child('visitors').child(dateTime.year.toString()).child(dateTime.month.toString()).once();
+    if(dataSnapshot.value == null) return visitorLog;
+    visitors = dataSnapshot.value;
     visitors.forEach((key, value) {
-      int unixTime = visitors[key]["date"];
-      if (dateTime.month == DateTime.fromMillisecondsSinceEpoch(visitors[key]["date"]) .month &&
-          dateTime.year == DateTime.fromMillisecondsSinceEpoch(visitors[key]["date"]).year){
+      unixTime = visitors[key]["date"] * 1000;
+      if (dateTime.month == DateTime.fromMillisecondsSinceEpoch(unixTime).month && dateTime.year == DateTime.fromMillisecondsSinceEpoch(unixTime).year){
         visitorLog.add(unixTime);
       }
     });
@@ -42,16 +48,18 @@ class FirebaseDatabaseRepository{
     return visitorLog;
   }
 
-  Future addVisitor() async{
-    await databaseReference.child('visitors').push().child("date").set((DateTime.now().millisecondsSinceEpoch));
-  }
-
   Future setAlarmOn() async{
     await databaseReference.child('doorbell/isOn').set(true);
   }
 
   Future setAlarmOff() async{
     await databaseReference.child('doorbell/isOn').set(false);
+  }
+
+  Future getWeather() async{
+    WeatherFactory wf = new WeatherFactory("78ac1e65c9434b6fa3255dcc7a1a7109", language: Language.INDONESIAN);
+    Weather weather= await wf.currentWeatherByCityName('semarang');
+    return weather;
   }
 
 }
