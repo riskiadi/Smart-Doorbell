@@ -102,110 +102,108 @@ class _HomePageState extends State<HomePage> {
                   builder: (context, snapshot) {
                     if(snapshot.hasData){
                       Weather weather = snapshot.data;
-                      return Container(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            //Temperature
-                            Container(
-                                width: MediaQuery.of(context).size.width/2.5,
-                                child: Container(
-                                  height: 90,
-                                  child: Stack(
-                                    children: [
-                                      Positioned(
-                                        child: Image.network(
-                                          "http://openweathermap.org/img/wn/10d@2x.png",
-                                          width: 80,
-                                          fit: BoxFit.cover,
-                                        ),
-                                        top: 0,
-                                        bottom: 25,
-                                        left: 90,
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          //Temperature
+                          Container(
+                              width: MediaQuery.of(context).size.width/2.5,
+                              child: Container(
+                                height: 90,
+                                child: Stack(
+                                  children: [
+                                    Positioned(
+                                      child: Image.network(
+                                        "http://openweathermap.org/img/wn/${weather.weatherIcon}@2x.png",
+                                        width: 80,
+                                        fit: BoxFit.cover,
                                       ),
-                                      Align(
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Container(
-                                              child: Center(
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      weather.temperature.celsius.round().toString(),
-                                                      style: TextStyle(
-                                                          fontSize: 30,
-                                                          fontWeight: FontWeight.w600
-                                                      ),
+                                      top: 0,
+                                      bottom: 25,
+                                      left: 90,
+                                    ),
+                                    Align(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Container(
+                                            child: Center(
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    weather.temperature.celsius.round().toString(),
+                                                    style: TextStyle(
+                                                        fontSize: 30,
+                                                        fontWeight: FontWeight.w600
                                                     ),
-                                                    SizedBox(width: 2),
-                                                    Container(
-                                                      width: 12,
-                                                      height: 12,
-                                                      padding: const EdgeInsets.all(3),
+                                                  ),
+                                                  SizedBox(width: 2),
+                                                  Container(
+                                                    width: 12,
+                                                    height: 12,
+                                                    padding: const EdgeInsets.all(3),
+                                                    decoration: BoxDecoration(
+                                                        color: Colors.black,
+                                                        borderRadius: BorderRadius.circular(30)
+                                                    ),
+                                                    child: Container(
                                                       decoration: BoxDecoration(
-                                                          color: Colors.black,
+                                                          color: Color(0xFFF6F8FA),
                                                           borderRadius: BorderRadius.circular(30)
                                                       ),
-                                                      child: Container(
-                                                        decoration: BoxDecoration(
-                                                            color: Color(0xFFF6F8FA),
-                                                            borderRadius: BorderRadius.circular(30)
-                                                        ),
-                                                      ),
                                                     ),
-                                                  ],
-                                                ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                            Text(
-                                              weather.areaName,
-                                              style: TextStyle(
-                                                fontSize: 15,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        alignment: Alignment.center,
-                                      ),
-                                    ],
-                                  ),
-                                )
-                            ),
-                            //status
-                            Container(
-                                width: MediaQuery.of(context).size.width/2.5,
-                                child: Container(
-                                  height: 90,
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        child: Center(
-                                          child: Text(
-                                            "${ReCase(weather.weatherDescription).sentenceCase}",
-                                            style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
                                           ),
+                                          Text(
+                                            weather.areaName,
+                                            style: TextStyle(
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      alignment: Alignment.center,
+                                    ),
+                                  ],
+                                ),
+                              )
+                          ),
+                          //status
+                          Container(
+                              width: MediaQuery.of(context).size.width/2.5,
+                              child: Container(
+                                height: 90,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      child: Center(
+                                        child: Text(
+                                          "${ReCase(weather.weatherDescription).sentenceCase}",
+                                          style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                      Text(
-                                        "Status",
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
+                                    ),
+                                    Text(
+                                      "Status",
+                                      style: TextStyle(
+                                        fontSize: 14,
                                       ),
-                                    ],
-                                  ),
-                                )
-                            ),
-                          ],
-                        ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                          ),
+                        ],
                       );
                     }else{
                       return Container();
@@ -223,7 +221,7 @@ class _HomePageState extends State<HomePage> {
                         width: MediaQuery.of(context).size.width/1.3,
                         padding: const EdgeInsets.only(bottom: 5),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(16),
                           color: Colors.white,
                           boxShadow: [
                             BoxShadow(
@@ -237,8 +235,8 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              margin: const EdgeInsets.only(left: 15, right: 15, top: 12, bottom: 10),
-                              child: Text("Home Visitors", style: TextStyle(fontSize: 15, color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500),),
+                              margin: const EdgeInsets.only(left: 17, right: 17, top: 14, bottom: 12),
+                              child: Text("Home Visitors", style: TextStyle(fontSize: 16, color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500),),
                             ),
                             ListView.builder(
                               shrinkWrap: true,
@@ -248,7 +246,7 @@ class _HomePageState extends State<HomePage> {
                                 return  Column(
                                   children: [
                                     visitorListWidget(unixTime: visitorLog[index]),
-                                    (index+1) == visitorLog.length ? Container() : Container(height: 0.15, color: Colors.black,),
+                                    (index+1) == visitorLog.length ? Container() : Container(height: 0.1, color: Colors.black,),
                                   ],
                                 );
                               },
