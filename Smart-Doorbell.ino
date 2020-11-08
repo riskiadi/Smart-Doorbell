@@ -15,8 +15,7 @@
 #define FIREBASE_AUTH "vGw7kpq6yTrIjPLVVciDBpqMoZxAkmaERSVRqZWt"
 #define WIFI_SSID "[Saputra]_plus"
 #define WIFI_PASSWORD "qwerty33"
-#define PIN_BUZZER D6
-#define PIN_TOUCH D8
+#define PIN_TOUCH D0
 #define PIN_LED D1
 
 
@@ -26,7 +25,7 @@ FirebaseData firebaseData;
 FirebaseJson json;
 time_t rawtime;
 struct tm * ti;
-Neotimer neoTimer = Neotimer(7000); // 7 second timer
+Neotimer neoTimer = Neotimer(10000); // timer send notif delay 10 second
 
 // Define NTP Client to get time
 const long utcOffsetInSeconds = 3600*7; // Time offset GMT+7 in UTC
@@ -72,8 +71,8 @@ void loop() {
     Firebase.setBool(firebaseData, "doorbell/isOn", true);
     isSend = true;
   }else{
-    Firebase.setBool(firebaseData, "doorbell/isOn", false);
     if(isSend){
+      Firebase.setBool(firebaseData, "doorbell/isOn", false);
       isSend = false;
       if(neoTimer.done()){
         neoTimer.stop();
@@ -110,18 +109,17 @@ void sendNotification(){
     Serial.print("status code: ");
     Serial.println(fcmHttpCode);
     Serial.println("--------");
+    
     //Send visitor history
-
     rawtime = timeClient.getEpochTime();
     ti = localtime (&rawtime);
     int month = (ti->tm_mon + 1) < 10 ? 0 + (ti->tm_mon + 1) : (ti->tm_mon + 1);
     int year = ti->tm_year + 1900;
-    
     json.set("date", (float)timeClient.getEpochTime());
     Firebase.pushJSON(firebaseData, "visitors/" + (String)year + "/" + (String)month , json);
-    
     neoTimer.start();
  }
+ 
 }
 
 

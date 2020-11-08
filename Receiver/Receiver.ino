@@ -85,7 +85,7 @@ void loop() {
 
    if(alarmIsOn){
 
-    //Limit alarm only 4 second to ring then reset ...
+    //Limit alarm to ring then reset ...
     if(alarmIsCounter<=10){
       alarmIsCounter++;
       digitalWrite(PIN_RELAY, LOW);
