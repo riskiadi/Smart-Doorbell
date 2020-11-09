@@ -1,7 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
-#include <WiFiClientSecure.h> 
-//#include <FirebaseArduino.h>
+#include <WiFiClientSecure.h>
 #include <FirebaseESP8266.h>
 #include <ESP8266HTTPClient.h>
 #include "Neotimer.h"
@@ -25,10 +24,10 @@ FirebaseData firebaseData;
 FirebaseJson json;
 time_t rawtime;
 struct tm * ti;
-Neotimer neoTimer = Neotimer(10000); // timer send notif delay 10 second
+Neotimer neoTimer = Neotimer(30000); // timer send notif delay 30 second
 
 // Define NTP Client to get time
-const long utcOffsetInSeconds = 3600*7; // Time offset GMT+7 in UTC
+const long utcOffsetInSeconds = 0; // Time offset GMT+7 in UTC 3600 = 1 hour
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "id.pool.ntp.org", utcOffsetInSeconds);
 
@@ -68,8 +67,10 @@ void loop() {
 
   Serial.println(digitalRead(PIN_TOUCH));
   if(digitalRead(PIN_TOUCH) == 1){
-    Firebase.setBool(firebaseData, "doorbell/isOn", true);
-    isSend = true;
+    if(!isSend){
+      isSend = true;
+      Firebase.setBool(firebaseData, "doorbell/isOn", true);
+    }
   }else{
     if(isSend){
       Firebase.setBool(firebaseData, "doorbell/isOn", false);
