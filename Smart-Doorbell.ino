@@ -74,20 +74,10 @@ void loop() {
   Serial.println(digitalRead(PIN_TOUCH));
   if(digitalRead(PIN_TOUCH) == 1){
     if(neoTimer2.done()){
-      if(!isSend){
-        isSend = true;
-        Firebase.setBool(firebaseData, "doorbell/isOn", true);
-      }
+      Firebase.setBool(firebaseData, "doorbell/isOn", true);
+      sendNotification();
       neoTimer2.stop();
       neoTimer2.start();
-    }
-  }else{
-    if(isSend){
-      isSend = false;
-      if(neoTimer.done()){
-        neoTimer.stop();
-        sendNotification();
-      }
     }
   }
   
@@ -127,10 +117,8 @@ void sendNotification(){
     int year = ti->tm_year + 1900;
     json.set("date", (float)timeClient.getEpochTime());
     Firebase.pushJSON(firebaseData, "visitors/" + (String)year + "/" + (String)month , json);
-
-    neoTimer.start();
     
- }
+  }
  
 }
 
