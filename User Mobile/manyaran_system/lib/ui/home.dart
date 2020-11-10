@@ -9,12 +9,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+import 'package:manyaran_system/models/counter.dart';
 import 'package:manyaran_system/repository/firebase_database.dart';
 import 'package:recase/recase.dart';
 import 'package:time_formatter/time_formatter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
-import 'package:weather/weather.dart';
 
 FirebaseDatabaseRepository _firebaseDatabaseRepository = FirebaseDatabaseRepository();
 
@@ -166,7 +166,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 HeaderWidget(),
                 Container(
-                  margin: const EdgeInsets.only(right: 16, left: 16, bottom: 10),
+                  margin: const EdgeInsets.only(right: 16, left: 16, bottom: 12),
                   width: double.infinity,
                   height: 0.7,
                   decoration: BoxDecoration(
@@ -174,11 +174,12 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 FutureBuilder(
-                  future: _firebaseDatabaseRepository.getWeather(),
+                  future: _firebaseDatabaseRepository.getBellCounter(),
                   builder: (context, snapshot) {
+                    Counter counter ;
                     if(snapshot.hasData){
-                      Weather weather = snapshot.data;
-                      return WeatherWidget(weather: weather);
+                      counter = snapshot.data;
+                      return InfoWidget(counter: counter);
                     }else{
                       return Container();
                     }
@@ -281,7 +282,7 @@ class HeaderWidget extends StatelessWidget {
                     builder: (context, AsyncSnapshot snapshot) {
                       return RichText(
                         text: TextSpan(
-                            text: "You have ",
+                            text: "The bell rang ",
                             style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w300,
@@ -297,7 +298,7 @@ class HeaderWidget extends StatelessWidget {
                               ),
                             ),
                             TextSpan(
-                              text: " visitor today.",
+                              text: " times today.",
                               style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w300,
@@ -351,118 +352,55 @@ class HeaderWidget extends StatelessWidget {
   }
 }
 
-class WeatherWidget extends StatelessWidget {
-  final Weather weather;
-
-  const WeatherWidget({
-    Key key,
-    @required this.weather,
-  }) : super(key: key);
-
+class InfoWidget extends StatelessWidget {
+  final Counter counter;
+  const InfoWidget({Key key, @required this.counter, }) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        //Temperature
-        Container(
-            width: MediaQuery.of(context).size.width/2.5,
-            child: Container(
-              height: 90,
-              child: Stack(
-                children: [
-                  Positioned(
-                    child: Image.network(
-                      "http://openweathermap.org/img/wn/${weather.weatherIcon}@2x.png",
-                      width: 80,
-                      fit: BoxFit.cover,
-                    ),
-                    top: 0,
-                    bottom: 25,
-                    left: MediaQuery.of(context).size.width/4.5,
-                  ),
-                  Align(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  weather.temperature.celsius.round().toString(),
-                                  style: TextStyle(
-                                      fontSize: 30,
-                                      fontWeight: FontWeight.w600
-                                  ),
-                                ),
-                                SizedBox(width: 2),
-                                Container(
-                                  width: 11,
-                                  height: 11,
-                                  padding: const EdgeInsets.all(2.5),
-                                  decoration: BoxDecoration(
-                                      color: Colors.black,
-                                      borderRadius: BorderRadius.circular(30)
-                                  ),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                        color: Color(0xFFF6F8FA),
-                                        borderRadius: BorderRadius.circular(30)
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Text(
-                          weather.areaName,
-                          style: TextStyle(
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                  ),
-                ],
-              ),
-            )
+    return IntrinsicHeight(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        width: MediaQuery.of(context).size.width/1.3,
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                spreadRadius: 10,
+              )
+            ]
         ),
-        //status
-        Container(
-            width: MediaQuery.of(context).size.width/2.5,
-            child: Container(
-              height: 90,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    child: Center(
-                      child: Text(
-                        "${ReCase(weather.weatherDescription).sentenceCase}",
-                        style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    "Status",
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            )
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Monthly Visitor", style: TextStyle(color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500)),
+                SizedBox(height: 5),
+                Text(
+                  "${counter.monthCount}x",
+                  style: TextStyle(fontWeight: FontWeight.w300),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+            VerticalDivider(),
+            Column(
+              children: [
+                Text("Annual Visitor", style: TextStyle(color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500)),
+                SizedBox(height: 5),
+                Text("${counter.yearCount}x",
+                  style: TextStyle(fontWeight: FontWeight.w300),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

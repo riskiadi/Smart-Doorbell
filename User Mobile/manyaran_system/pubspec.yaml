@@ -34,7 +34,6 @@ dependencies:
   time_formatter: ^1.0.0
   intl: ^0.16.1
   vibration: ^1.7.1
-  weather: ^1.2.3
   recase: ^3.0.0
 
 dev_dependencies:

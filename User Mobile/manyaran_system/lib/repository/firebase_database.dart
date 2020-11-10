@@ -1,5 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
-import 'package:weather/weather.dart';
+import 'package:manyaran_system/models/counter.dart';
 
 class FirebaseDatabaseRepository{
 
@@ -56,10 +56,24 @@ class FirebaseDatabaseRepository{
     await databaseReference.child('doorbell/isOn').set(false);
   }
 
-  Future getWeather() async{
-    WeatherFactory wf = new WeatherFactory("78ac1e65c9434b6fa3255dcc7a1a7109", language: Language.INDONESIAN);
-    Weather weather= await wf.currentWeatherByCityName('semarang');
-    return weather;
+  Future getBellCounter() async{
+    DateTime dateTime = DateTime.now();
+    int totalMonth = 0;
+    int totalYear = 0;
+    Map<dynamic, dynamic> counterMonth;
+    Map<dynamic, dynamic> counterYear;
+    DataSnapshot dataSnapshotMonth = await databaseReference.child('visitors').child(dateTime.year.toString()).once();
+    counterMonth = dataSnapshotMonth.value;
+    counterMonth[dateTime.month.toString()].forEach((key, value) {
+      totalMonth++;
+    });
+    counterMonth.forEach((key, value) {
+      counterYear = value;
+      counterYear.forEach((key, value) {
+        totalYear++;
+      });
+    });
+    return Counter(monthCount: totalMonth, yearCount: totalYear);
   }
 
 }
