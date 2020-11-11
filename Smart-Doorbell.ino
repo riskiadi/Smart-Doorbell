@@ -25,7 +25,7 @@ FirebaseJson json;
 time_t rawtime;
 struct tm * ti;
 Neotimer neoTimer = Neotimer(15000); // timer send notif delay 15 second
-Neotimer neoTimer2 = Neotimer(6000); // timer set push button every 6 second
+Neotimer neoTimer2 = Neotimer(4000); // timer set push button every 6 second
 
 // Define NTP Client to get time
 const long utcOffsetInSeconds = 0; // Time offset GMT+7 in UTC 3600 = 1 hour
@@ -68,14 +68,17 @@ void setup() {
 
 void loop() {
 
-  //update epoch time
   timeClient.update();
 
   Serial.println(digitalRead(PIN_TOUCH));
   if(digitalRead(PIN_TOUCH) == 1){
     if(neoTimer2.done()){
       Firebase.setBool(firebaseData, "doorbell/isOn", true);
-      sendNotification();
+      if(neoTimer.done()){
+        neoTimer.stop();
+        neoTimer.start();
+        sendNotification();
+      }
       neoTimer2.stop();
       neoTimer2.start();
     }
@@ -89,7 +92,7 @@ void loop() {
 
 void sendNotification(){
  if(!client.connected()) {
-    Serial.println("Failed to connect using insecure client, check internet connection or try to use fingerprint..");
+   Serial.println("Failed to connect using insecure client, check internet connection or try to use fingerprint..");
    client.setInsecure();
    client.setTimeout(10000);
    client.connect("fcm.googleapis.com", 443);

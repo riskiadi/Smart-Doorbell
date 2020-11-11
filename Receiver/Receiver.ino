@@ -67,11 +67,11 @@ void loop() {
 
       digitalWrite(PIN_LED_ONE, HIGH);
       digitalWrite(PIN_RELAY, LOW);
-      delay(2000);
+      delay(500);
       digitalWrite(PIN_RELAY, HIGH);
       delay(500);
       digitalWrite(PIN_RELAY, LOW);
-      delay(1500);
+      delay(500);
       digitalWrite(PIN_RELAY, HIGH);
       digitalWrite(PIN_LED_ONE, LOW);
       Firebase.setBool(firebaseData, "doorbell/isOn", false);
