@@ -175,9 +175,8 @@ class _HomePageState extends State<HomePage> {
                 FutureBuilder(
                   future: _firebaseDatabaseRepository.getBellCounter(),
                   builder: (context, snapshot) {
-                    Counter counter ;
                     if(snapshot.hasData){
-                      counter = snapshot.data;
+                      Counter counter = snapshot.data;
                       return InfoWidget(counter: counter);
                     }else{
                       return Container();
@@ -210,7 +209,59 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             Container(
                               margin: const EdgeInsets.only(left: 17, right: 17, top: 14, bottom: 12),
-                              child: Text("Bell Records", style: TextStyle(fontSize: 15, color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500),),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text("Bell Records", style: TextStyle(fontSize: 15, color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500),),
+                                  PopupMenuButton(
+                                    child: Icon(Icons.more_vert_rounded, size: 20, color: Colors.black.withOpacity(0.6),),
+                                    onSelected: (value) {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            title: Text("Delete Records"),
+                                            content: Text("Are you sure want to delete all records?"),
+                                            actions: [
+                                              FlatButton(child: Text("CANCEL"), onPressed: () => {Navigator.pop(context),},),
+                                              FlatButton(
+                                                child: Text("DELETE"),
+                                                onPressed: () {
+                                                  _firebaseDatabaseRepository.deleteRecords();
+                                                  Navigator.pop(context);
+                                                },
+                                              )
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    },
+                                    itemBuilder: (BuildContext context) {
+                                      return <PopupMenuEntry<String>>[
+                                        PopupMenuItem<String>(
+                                          child: Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.delete,
+                                                    size: 20,
+                                                    color: Colors.red.withOpacity(0.9),
+                                                  ),
+                                                  SizedBox(width: 10),
+                                                  Text(
+                                                    "Delete records",
+                                                    style: TextStyle(
+                                                      color: Colors.black.withOpacity(0.6),
+                                                    ),
+                                                  )
+                                                ],
+                                              ),
+                                          value: "delete",
+                                        )
+                                      ];
+                                    },
+                                  )
+                                ],
+                              )
                             ),
                             ListView.builder(
                               shrinkWrap: true,

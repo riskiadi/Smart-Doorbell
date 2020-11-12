@@ -64,9 +64,13 @@ class FirebaseDatabaseRepository{
     Map<dynamic, dynamic> counterYear;
     DataSnapshot dataSnapshotMonth = await databaseReference.child('visitors').child(dateTime.year.toString()).once();
     counterMonth = dataSnapshotMonth.value;
-    counterMonth[dateTime.month.toString()].forEach((key, value) {
-      totalMonth++;
-    });
+
+    if(counterMonth[dateTime.month.toString()] != null){
+      counterMonth[dateTime.month.toString()].forEach((key, value) {
+        totalMonth++;
+      });
+    }
+
     counterMonth.forEach((key, value) {
       counterYear = value;
       counterYear.forEach((key, value) {
@@ -74,6 +78,10 @@ class FirebaseDatabaseRepository{
       });
     });
     return Counter(monthCount: totalMonth, yearCount: totalYear);
+  }
+
+  Future deleteRecords() async{
+    return await databaseReference.child('visitors').remove();
   }
 
 }
