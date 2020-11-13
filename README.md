@@ -6,7 +6,7 @@ Smart Doorbell is an Internet of Things (IoT) project, integrating a doorbell wi
 
 <table>
   <tr>
-    <th>Items</th>
+    <th>Item</th>
     <th>Description</th>
     <th>Amount</th>
   </tr>
