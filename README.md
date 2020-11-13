@@ -25,7 +25,7 @@ Smart Doorbell is an Internet of Things (IoT) project, integrating a doorbell wi
   </tr>
   <tr>
     <td>Round alarm baby bell</td>
-    <td>small bell 55mm dimension with 220Vac</td>
+    <td>Small bell 55mm dimension with 220Vac</td>
     <td>1</td>
   </tr>
   <tr>
