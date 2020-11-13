@@ -2,9 +2,11 @@
 
 Smart Doorbell is an Internet of Things (IoT) project, integrating a doorbell with a user's smartphone. This project uses a [NodeMCU](https://en.wikipedia.org/wiki/NodeMCU) board which includes the [ESP8266](https://en.wikipedia.org/wiki/ESP8266) low-cost Wi-Fi microchip.
 
+### Ingredients
+
 <table>
   <tr>
-    <th>Item</th>
+    <th>Items</th>
     <th>Description</th>
     <th>Amount</th>
   </tr>
@@ -39,14 +41,12 @@ Smart Doorbell is an Internet of Things (IoT) project, integrating a doorbell wi
   </tr>
 </table>
 
-<table>
-  <tr>
-    <td><img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img1.jpg" width="40%"/></td>
-  </tr>
-  <tr>
-    <td><img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img2.jpg" width="40%"/></td>
-  </tr>
-  <tr>
-    <td><img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img3.jpg" width="30%"/></td>
-  </tr>
-</table>
+### Project Images
+
+<p float="left">
+<img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img1.jpg" width="33%" height="400px" alt="image1"/>
+<img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img2.jpg" width="33%" height="400px" alt="image2"/>
+<img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img3.jpg" width="33%" height="400px" alt="image3"/>
+</p>
+
+
