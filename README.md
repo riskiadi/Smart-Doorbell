@@ -37,7 +37,7 @@ Smart Doorbell is an Internet of Things (IoT) project, integrating a doorbell wi
   </tr>
   <tr>
     <th>Total Cost</th>
-    <td colspan="2">IDR 38.500 / $2.8 (approx)</td>
+    <td colspan="2">IDR 118.500 / $8.5 (approx)</td>
   </tr>
 </table>
 
