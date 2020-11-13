@@ -1,14 +1,52 @@
 # Smart Doorbell
-Smart Doorbell is Internet of Things (IoT) project, integrate doorbell with user smartphone 
+
+Smart Doorbell is an Internet of Things (IoT) project, integrating a doorbell with a user's smartphone. This project uses a [NodeMCU](https://en.wikipedia.org/wiki/NodeMCU) board which includes the [ESP8266](https://en.wikipedia.org/wiki/ESP8266) low-cost Wi-Fi microchip.
 
 <table>
   <tr>
-    <td><img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img1.jpg" width="60%"/></td>
+    <th>Item</th>
+    <th>Description</th>
+    <th>Amount</th>
   </tr>
   <tr>
-    <td><img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img2.jpg" width="60%"/></td>
+    <td>NodeMCU</td>
+    <td>Single board microcontroller</td>
+    <td>2</td>
   </tr>
   <tr>
-    <td><img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img3.jpg" width="60%"/></td>
+    <td>TTP223</td>
+    <td>Capacitive touch sensor</td>
+    <td>1</td>
+  </tr>
+  <tr>
+    <td>Relay 1 channel</td>
+    <td>1 channel relay 5V with optocoupler high quality</td>
+    <td>1</td>
+  </tr>
+  <tr>
+    <td>Round alarm baby bell</td>
+    <td>small bell 55mm dimension with 220Vac</td>
+    <td>1</td>
+  </tr>
+  <tr>
+    <td>LED</td>
+    <td>5mm super bright blue color light</td>
+    <td>3</td>
+  </tr>
+  <tr>
+    <th>Total Cost</th>
+    <td colspan="2">IDR 38.500 / $2.8 (approx)</td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img1.jpg" width="40%"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img2.jpg" width="40%"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img3.jpg" width="30%"/></td>
   </tr>
 </table>
