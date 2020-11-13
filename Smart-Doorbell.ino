@@ -24,8 +24,7 @@ FirebaseData firebaseData;
 FirebaseJson json;
 time_t rawtime;
 struct tm * ti;
-Neotimer neoTimer = Neotimer(15000); // timer send notif delay 15 second
-Neotimer neoTimer2 = Neotimer(4000); // timer set push button every 6 second
+Neotimer neoTimer = Neotimer(4000); // timer set push button every 4 second
 
 // Define NTP Client to get time
 const long utcOffsetInSeconds = 0; // Time offset GMT+7 in UTC 3600 = 1 hour
@@ -58,7 +57,6 @@ void setup() {
   digitalWrite(PIN_LED, HIGH);
 
   neoTimer.start();
-  neoTimer2.start();
 
   //send First device startup time
   timeClient.update();
@@ -72,25 +70,24 @@ void loop() {
 
   Serial.println(digitalRead(PIN_TOUCH));
   if(digitalRead(PIN_TOUCH) == 1){
-    if(neoTimer2.done()){
+    if(neoTimer.done()){
       Firebase.setBool(firebaseData, "doorbell/isOn", true);
-      if(neoTimer.done()){
-        neoTimer.stop();
-        neoTimer.start();
-        sendNotification();
-      }
-      neoTimer2.stop();
-      neoTimer2.start();
+      sendNotification();
+      neoTimer.stop();
+      neoTimer.start();
     }
   }
   
-  delay(10);
+  delay(50);
   
 }
 
 
 
 void sendNotification(){
+ client.setInsecure();
+ client.setTimeout(10000);
+ client.connect("fcm.googleapis.com", 443); 
  if(!client.connected()) {
    Serial.println("Failed to connect using insecure client, check internet connection or try to use fingerprint..");
    client.setInsecure();
@@ -100,8 +97,7 @@ void sendNotification(){
  }else{
     Serial.println("[Success to connect]");
     Serial.println("--------");
-    Serial.print("Sending post request to: ");
-    Serial.println("https://fcm.googleapis.com/fcm/send");
+    Serial.print("Sending post request...");
     http.begin(client,"https://fcm.googleapis.com/fcm/send");
     http.addHeader("User-Agent", "PostmanRuntime/7.26.5");
     http.addHeader("Connection", "keep-alive");
@@ -120,9 +116,12 @@ void sendNotification(){
     int year = ti->tm_year + 1900;
     json.set("date", (float)timeClient.getEpochTime());
     Firebase.pushJSON(firebaseData, "visitors/" + (String)year + "/" + (String)month , json);
+
+    http.end();
+    client.stop();
     
   }
- 
+  
 }
 
 
