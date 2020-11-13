@@ -44,9 +44,9 @@ Smart Doorbell is an Internet of Things (IoT) project, integrating a doorbell wi
 ### Project Images
 
 <div>
-  <img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img1.jpg" align="left" width="30%" height="400px" alt="image1"/>
-  <img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img2.jpg" align="left" width="30%" height="400px" alt="image2"/>
-  <img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img3.jpg" align="left" width="30%" height="400px" alt="image3"/>
+  <img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img1.jpg" align="left" width=500px" height="400px" alt="image1"/>
+  <img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img2.jpg" align="left" width="300px" height="400px" alt="image2"/>
+  <img src="https://raw.githubusercontent.com/riskiadi/Smart-Doorbell/master/_images/img3.jpg" align="left" width="300px" height="600px" alt="image3"/>
 </div>
 
 
