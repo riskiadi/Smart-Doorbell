@@ -10,6 +10,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:manyaran_system/models/counter.dart';
+import 'package:manyaran_system/models/devicestatus.dart';
 import 'package:manyaran_system/repository/firebase_database.dart';
 import 'package:time_formatter/time_formatter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -318,7 +319,60 @@ class HeaderWidget extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Smart Doorbell", style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600)),
+              InkWell(
+                child: Text("Smart Doorbell", style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600)),
+                onTap: () {
+                  _firebaseDatabaseRepository.getDeviceStatus().then((DeviceStatus value){
+                    final int buttonUnix = value.buttonStatus*1000;
+                    final int bellUnix = value.bellStatus*1000;
+                    DateTime buttonStatus = DateTime.fromMillisecondsSinceEpoch(buttonUnix);
+                    DateTime bellStatus = DateTime.fromMillisecondsSinceEpoch(bellUnix);
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text('Device First Boot'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text('Door Button', style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold),),
+                                  SizedBox(width: 5,),
+                                  Text(formatTime(buttonUnix), style: TextStyle(fontSize: 13, color: Colors.black.withOpacity(0.7)),),
+                                ],
+                              ),
+                              SizedBox(height: 2,),
+                              Text(DateFormat("dd-LLLL-yyyy kk:mm:ss").format(buttonStatus), style: TextStyle(fontSize: 13),),
+                              SizedBox(height: 12,),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text('Door Bell', style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold),),
+                                  SizedBox(width: 5,),
+                                  Text(formatTime(bellUnix), style: TextStyle(fontSize: 13, color: Colors.black.withOpacity(0.7)),),
+                                ],
+                              ),
+                              SizedBox(height: 2,),
+                              Text(DateFormat("dd-LLLL-yyyy kk:mm:ss").format(bellStatus), style: TextStyle(fontSize: 13),),
+                            ],
+                          ),
+                          actions: [
+                            FlatButton(
+                              child: Text("OK"),
+                              onPressed: (){
+                                Navigator.pop(context);
+                              },
+                            )
+                          ],
+                        );
+                      },
+                    );
+                  });
+                },
+              ),
               SizedBox(height: 7),
               Row(
                 children: [

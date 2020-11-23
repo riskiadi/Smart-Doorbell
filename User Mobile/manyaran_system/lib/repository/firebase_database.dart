@@ -1,5 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:manyaran_system/models/counter.dart';
+import 'package:manyaran_system/models/devicestatus.dart';
+import 'package:time_formatter/time_formatter.dart';
 
 class FirebaseDatabaseRepository{
 
@@ -48,14 +50,6 @@ class FirebaseDatabaseRepository{
     return visitorLog;
   }
 
-  Future setAlarmOn() async{
-    await databaseReference.child('doorbell/isOn').set(true);
-  }
-
-  Future setAlarmOff() async{
-    await databaseReference.child('doorbell/isOn').set(false);
-  }
-
   Future getBellCounter() async{
     DateTime dateTime = DateTime.now();
     int totalMonth = 0;
@@ -79,7 +73,21 @@ class FirebaseDatabaseRepository{
     });
     return Counter(monthCount: totalMonth, yearCount: totalYear);
   }
+  
+  Future<DeviceStatus> getDeviceStatus() async{
+    DataSnapshot snapshotButton = await databaseReference.child('bellbutton').child('firstBoot').once();
+    DataSnapshot snapshotBell = await databaseReference.child('doorbell').child('firstBoot').once();
+    return DeviceStatus(buttonStatus: snapshotButton.value, bellStatus: snapshotBell.value);
+  }
 
+  Future setAlarmOn() async{
+    await databaseReference.child('doorbell/isOn').set(true);
+  }
+
+  Future setAlarmOff() async{
+    await databaseReference.child('doorbell/isOn').set(false);
+  }
+  
   Future deleteRecords() async{
     return await databaseReference.child('visitors').remove();
   }
