@@ -30,7 +30,7 @@ class FirebaseDatabaseRepository{
     return visitorCounter;
   }
 
-  Future getVisitors() async{
+  Future <List<int>> getVisitors() async{
     int unixTime;
     DateTime dateTime = DateTime.now();
     List<int> visitorLog = List();

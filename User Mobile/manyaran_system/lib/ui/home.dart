@@ -187,7 +187,7 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(height: 15),
                 FutureBuilder(
                   future: _firebaseDatabaseRepository.getVisitors(),
-                  builder: (context, AsyncSnapshot snapshot) {
+                  builder: (context, AsyncSnapshot<List<int>> snapshot) {
                     if(snapshot.hasData){
                       List visitorLog = snapshot.data;
                       if(visitorLog.length<=0) return emptyVisitorState();
@@ -213,7 +213,7 @@ class _HomePageState extends State<HomePage> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text("Bell Records", style: TextStyle(fontSize: 15, color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500),),
+                                  Text("Visitor Records", style: TextStyle(fontSize: 15, color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500),),
                                   PopupMenuButton(
                                     child: Icon(Icons.more_vert_rounded, size: 20, color: Colors.black.withOpacity(0.6),),
                                     onSelected: (value) {
@@ -461,49 +461,52 @@ class InfoWidget extends StatelessWidget {
   const InfoWidget({Key key, @required this.counter, }) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        width: MediaQuery.of(context).size.width/1.3,
-        decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.02),
-                blurRadius: 10,
-                spreadRadius: 10,
-              )
-            ]
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Monthly Records", style: TextStyle(color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500)),
-                SizedBox(height: 5),
-                Text(
-                  "${counter.monthCount}",
-                  style: TextStyle(fontWeight: FontWeight.w300),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-            VerticalDivider(),
-            Column(
-              children: [
-                Text("Annual Records", style: TextStyle(color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500)),
-                SizedBox(height: 5),
-                Text("${counter.yearCount}",
-                  style: TextStyle(fontWeight: FontWeight.w300),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      width: MediaQuery.of(context).size.width/1.3,
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              spreadRadius: 10,
+            )
+          ]
+      ),
+      child: Column(
+        children: [
+          Text(DateFormat.MMMM().add_y().format(DateTime.now()), style: TextStyle(color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.bold)),
+          Container(height: 0.1, color: Colors.black, margin: const EdgeInsets.symmetric(vertical: 10),),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("Monthly Records", style: TextStyle(color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500)),
+                  SizedBox(height: 5),
+                  Text(
+                    "${counter.monthCount}",
+                    style: TextStyle(fontWeight: FontWeight.w300),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+              Column(
+                children: [
+                  Text("Annual Records", style: TextStyle(color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500)),
+                  SizedBox(height: 5),
+                  Text("${counter.yearCount}",
+                    style: TextStyle(fontWeight: FontWeight.w300),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -526,28 +529,22 @@ class visitorListWidget extends StatelessWidget {
       child: IntrinsicHeight(
         child: Row(
           children: [
-            FittedBox(
-              fit: BoxFit.fitWidth,
-              child: Text(DateFormat.Hm().format(_date), style: TextStyle(fontWeight: FontWeight.w300),),
+            CircleAvatar(
+              radius: 15,
+              child: Text(DateFormat.d().format(_date), style: TextStyle(fontSize:15, fontWeight: FontWeight.w300),),
+              foregroundColor: Colors.black.withOpacity(0.5),
+              backgroundColor: Colors.black.withOpacity(0.1),
             ),
             VerticalDivider(),
             Expanded(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  FittedBox(
-                    fit: BoxFit.fitWidth,
-                    child: Text(DateFormat.d().add_MMMM().add_y().format(_date), style: TextStyle(fontWeight: FontWeight.w300),),
-                  ),
-                  FittedBox(
-                    fit: BoxFit.fitWidth,
-                    child: Text(formatTime(unixTime), style: TextStyle(fontSize: 11, color: Colors.black.withOpacity(0.4)),)
-                  ),
-
+                  Text(DateFormat.Hms().format(_date), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300)),
+                  Text(formatTime(unixTime), style: TextStyle(fontWeight: FontWeight.w300))
                 ],
-
               ),
-            )
+            ),
           ],
         ),
       ),
