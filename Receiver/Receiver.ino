@@ -34,7 +34,7 @@ void setup() {
   pinMode(PIN_LED_ONE, OUTPUT);
 
   //turn off relay on first startup.
-  digitalWrite(PIN_RELAY, HIGH);
+  digitalWrite(PIN_RELAY, HIGH); // Relay OFF
 
   delay(10);
 
@@ -66,14 +66,14 @@ void loop() {
    if(alarmIsOn){
 
       digitalWrite(PIN_LED_ONE, HIGH);
-      digitalWrite(PIN_RELAY, LOW);
-      delay(500);
-      digitalWrite(PIN_RELAY, HIGH);
-      delay(500);
-      digitalWrite(PIN_RELAY, LOW);
-      delay(500);
-      digitalWrite(PIN_RELAY, HIGH);
+
+      // Low is ON .. High is OFF
+      digitalWrite(PIN_RELAY, LOW); // ON
+      delay(800);
+      digitalWrite(PIN_RELAY, HIGH); // OFF
+      
       digitalWrite(PIN_LED_ONE, LOW);
+      
       Firebase.setBool(firebaseData, "doorbell/isOn", false);
     
    }else{
@@ -81,7 +81,7 @@ void loop() {
     digitalWrite(PIN_LED_ONE, LOW);
    }
    
-   delay(10);
+   delay(50);
 
 }
 

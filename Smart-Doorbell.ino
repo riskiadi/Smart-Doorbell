@@ -14,9 +14,7 @@
 #define FIREBASE_AUTH "vGw7kpq6yTrIjPLVVciDBpqMoZxAkmaERSVRqZWt"
 #define WIFI_SSID "[Saputra]_plus"
 #define WIFI_PASSWORD "qwerty33"
-#define PIN_TOUCH D0
-#define PIN_LED D1
-
+#define PIN_TOUCH D6
 
 BearSSL::WiFiClientSecure client;
 HTTPClient http;
@@ -24,10 +22,10 @@ FirebaseData firebaseData;
 FirebaseJson json;
 time_t rawtime;
 struct tm * ti;
-Neotimer neoTimer = Neotimer(4000); // timer set push button every 4 second
+Neotimer neoTimer = Neotimer(8000); // timer set push button every 4 second
 
 // Define NTP Client to get time
-const long utcOffsetInSeconds = 0; // Time offset GMT+7 in UTC 3600 = 1 hour
+const long utcOffsetInSeconds = -18; // Time offset GMT+7 in UTC 3600 = 1 hour
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "id.pool.ntp.org", utcOffsetInSeconds);
 
@@ -53,9 +51,6 @@ void setup() {
   client.setTimeout(10000);
   client.connect("fcm.googleapis.com", 443); 
 
-  pinMode(PIN_LED, OUTPUT);
-  digitalWrite(PIN_LED, HIGH);
-
   neoTimer.start();
 
   //send First device startup time
@@ -67,7 +62,6 @@ void setup() {
 void loop() {
 
   timeClient.update();
-
   Serial.println(digitalRead(PIN_TOUCH));
   if(digitalRead(PIN_TOUCH) == 1){
     if(neoTimer.done()){
@@ -95,6 +89,7 @@ void sendNotification(){
    client.connect("fcm.googleapis.com", 443);
    sendNotification();
  }else{
+  
     Serial.println("[Success to connect]");
     Serial.println("--------");
     Serial.print("Sending post request...");
@@ -103,7 +98,7 @@ void sendNotification(){
     http.addHeader("Connection", "keep-alive");
     http.addHeader("Content-Type", "application/json");
     http.addHeader("Authorization", "key=AAAAAs30-qE:APA91bH2N8b_Lfp7B4aKMbKwPFedzwVWP3ffe_gPbwLdIE4jStahP5dQZ3AuVRnoGum-1LU8iWQZ8gT5DnkGYKL66LBN3w7nMYZYOwSiaa7IQZEEDWV64HTmnctWPzBvzne3gYmcWunn");
-    fcmHttpCode = http.POST("{ \"to\": \"/topics/Doorbell\", \"topic\": \"Doorbell\", \"notification\": { \"title\": \"MANYARAN SISTEM\", \"body\": \"Seseorang mengunjungi rumah anda.\", \"sound\": \"notification.mp3\", \"android_channel_id\" : \"manyaran_id\", \"click_action\" : \"FLUTTER_NOTIFICATION_CLICK\" } }");
+    fcmHttpCode = http.POST("{ \"to\":\"/topics/Doorbell\", \"priority\" : \"high\", \"notification\":{ \"title\":\"Manyaran Sistem\", \"body\":\"Seseorang mengunjungi rumah anda.\", \"sound\":\"notification.mp3\", \"android_channel_id\":\"manyaran_id\", \"tag\": \"tag1\", \"click_action\":\"FLUTTER_NOTIFICATION_CLICK\" } }");
     Serial.print("Post request completed, ");
     Serial.print("status code: ");
     Serial.println(fcmHttpCode);
@@ -114,7 +109,7 @@ void sendNotification(){
     ti = localtime (&rawtime);
     int month = (ti->tm_mon + 1) < 10 ? 0 + (ti->tm_mon + 1) : (ti->tm_mon + 1);
     int year = ti->tm_year + 1900;
-    json.set("date", (float)timeClient.getEpochTime());
+    json.set("date", (int)timeClient.getEpochTime());
     Firebase.pushJSON(firebaseData, "visitors/" + (String)year + "/" + (String)month , json);
 
     http.end();
