@@ -1,7 +1,12 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:flutter/widgets.dart';
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:device_apps/device_apps.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
@@ -12,18 +17,32 @@ import 'package:intl/intl.dart';
 import 'package:manyaran_system/models/counter.dart';
 import 'package:manyaran_system/models/devicestatus.dart';
 import 'package:manyaran_system/repository/firebase_database.dart';
+import 'package:manyaran_system/ui/setting.dart';
 import 'package:time_formatter/time_formatter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
 
+extension DateOnlyCompare on DateTime{
+  bool isSameDay(DateTime other){
+    return this.year == other.year && this.month == other.month && this.day == other.day;
+  }
+}
+
 FirebaseDatabaseRepository _firebaseDatabaseRepository = FirebaseDatabaseRepository();
 
 class HomePage extends StatefulWidget {
+
+  final User user;
+
+  const HomePage({@required this.user});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+
+  User _user;
 
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   StreamSubscription visitorSubscription;
@@ -33,6 +52,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+
+    _user = widget.user;
 
     _firebaseMessaging.subscribeToTopic('Doorbell');
     _firebaseMessaging.configure(onMessage: (Map<String, dynamic> message) {
@@ -75,65 +96,6 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  Widget floatingButtonCustom(BuildContext context) {
-    return GestureDetector(
-      onTap: (){
-        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Press hold to ring a bell"),));
-      },
-      onLongPress: (){
-        vibrateDevice();
-        _firebaseDatabaseRepository.setAlarmOn();
-        setState(() {
-          _isPressed = true;
-        });
-      },
-      onLongPressUp: () {
-        _firebaseDatabaseRepository.setAlarmOff();
-        setState(() {
-          _isPressed = false;
-        });
-      },
-      child: Container(
-        width: MediaQuery.of(context).size.width / 2,
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            gradient: LinearGradient(
-                begin: Alignment(-1.0, -2.0),
-                end: Alignment(1.0, 2.0),
-                colors: <Color>[
-                  Color(0xff2296f3),
-                  Color(0xff06b3fa),
-                  Color(0xff1c9df5)
-                ]),
-            boxShadow: <BoxShadow>[
-              BoxShadow(
-                  color: Color(0xff2296f3).withOpacity(0.7), blurRadius: 10
-              )
-            ]
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.notifications_active_rounded,
-              color: _isPressed ? Colors.black.withOpacity(0.5) : Colors.white,
-            ),
-            SizedBox(width: 14),
-            Text(
-              "Press and Hold",
-              style: TextStyle(
-                  color: _isPressed ? Colors.black.withOpacity(0.5) : Colors.white,
-                  letterSpacing: 1,
-                  fontWeight: FontWeight.w300
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget emptyVisitorState() {
     return Container(
       height: MediaQuery.of(context).size.height/1.9,
@@ -160,11 +122,11 @@ class _HomePageState extends State<HomePage> {
           key: _scaffoldKey,
           backgroundColor: Color(0xffF6F8FA),
           floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-          floatingActionButton: floatingButtonCustom(context),
           body: SingleChildScrollView(
             child: Column(
+              mainAxisSize: MainAxisSize.max,
               children: [
-                HeaderWidget(),
+                HeaderWidget(user: _user,),
                 Container(
                   margin: const EdgeInsets.only(right: 16, left: 16, bottom: 12),
                   width: double.infinity,
@@ -185,101 +147,15 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
                 SizedBox(height: 15),
+                // cameraViewer(),
+                SizedBox(height: 15),
                 FutureBuilder(
                   future: _firebaseDatabaseRepository.getVisitors(),
                   builder: (context, AsyncSnapshot<List<int>> snapshot) {
                     if(snapshot.hasData){
                       List visitorLog = snapshot.data;
                       if(visitorLog.length<=0) return emptyVisitorState();
-                      return Container(
-                        width: MediaQuery.of(context).size.width/1.3,
-                        padding: const EdgeInsets.only(bottom: 5),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.black.withOpacity(0.02),
-                                blurRadius: 10,
-                                spreadRadius: 10
-                            )
-                          ]
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(left: 17, right: 17, top: 14, bottom: 12),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text("Visitor Records", style: TextStyle(fontSize: 15, color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500),),
-                                  PopupMenuButton(
-                                    child: Icon(Icons.more_vert_rounded, size: 20, color: Colors.black.withOpacity(0.6),),
-                                    onSelected: (value) {
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) {
-                                          return AlertDialog(
-                                            title: Text("Delete Records"),
-                                            content: Text("Are you sure want to delete all records?"),
-                                            actions: [
-                                              FlatButton(child: Text("CANCEL"), onPressed: () => {Navigator.pop(context),},),
-                                              FlatButton(
-                                                child: Text("DELETE"),
-                                                onPressed: () {
-                                                  _firebaseDatabaseRepository.deleteRecords();
-                                                  Navigator.pop(context);
-                                                },
-                                              )
-                                            ],
-                                          );
-                                        },
-                                      );
-                                    },
-                                    itemBuilder: (BuildContext context) {
-                                      return <PopupMenuEntry<String>>[
-                                        PopupMenuItem<String>(
-                                          child: Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.delete,
-                                                    size: 20,
-                                                    color: Colors.red.withOpacity(0.9),
-                                                  ),
-                                                  SizedBox(width: 10),
-                                                  Text(
-                                                    "Delete records",
-                                                    style: TextStyle(
-                                                      color: Colors.black.withOpacity(0.6),
-                                                    ),
-                                                  )
-                                                ],
-                                              ),
-                                          value: "delete",
-                                        )
-                                      ];
-                                    },
-                                  )
-                                ],
-                              )
-                            ),
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: ScrollPhysics(),
-                              itemCount: visitorLog.length,
-                              itemBuilder: (context, index) {
-                                return  Column(
-                                  children: [
-                                    visitorListWidget(unixTime: visitorLog[index]),
-                                    (index+1) == visitorLog.length ? Container() : Container(height: 0.1, color: Colors.black,),
-                                  ],
-                                );
-                              },
-                            ),
-                          ],
-                        )
-                      );
+                      return VisitorsRecordsWidget(visitorLog: visitorLog);
                     }else{
                       return CircularProgressIndicator();
                     }
@@ -290,6 +166,20 @@ class _HomePageState extends State<HomePage> {
             ),
           )),
     );
+  }
+
+}
+
+class cameraViewer extends StatelessWidget {
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(child: VlcPlayer(
+      controller: VlcPlayerController(),
+      aspectRatio: 480,
+      url: 'rtsp://192.168.100.17',
+      placeholder: Container(child: Text('Cam Ready!'),),
+    ),);
   }
 
 }
@@ -305,9 +195,9 @@ Future<void> openCCTV() async {
 
 class HeaderWidget extends StatelessWidget {
 
-  const HeaderWidget({
-    Key key,
-  }) : super(key: key);
+  final User user;
+
+  const HeaderWidget({Key key, @required this.user}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -320,7 +210,7 @@ class HeaderWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               InkWell(
-                child: Text("Smart Doorbell", style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600)),
+                child: Text("Smart Doorbell", style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600, color: Color(0XFFBE3D60),),),
                 onTap: () {
                   _firebaseDatabaseRepository.getDeviceStatus().then((DeviceStatus value){
                     final int buttonUnix = value.buttonStatus*1000;
@@ -379,6 +269,7 @@ class HeaderWidget extends StatelessWidget {
                   Icon(
                     Icons.notifications_active_sharp,
                     size: 15,
+                    color:  Colors.black,
                   ),
                   SizedBox(width: 5),
                   FutureBuilder(
@@ -389,24 +280,24 @@ class HeaderWidget extends StatelessWidget {
                             text: "The bell rang ",
                             style: TextStyle(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w300,
-                              color: Colors.black
+                                fontWeight: FontWeight.w400,
+                              color: Colors.black,
                             ),
                           children: <TextSpan>[
                             TextSpan(
                               text: snapshot.data==null ? "-" : snapshot.data.toString(),
                               style: TextStyle(
                                   fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
+                                  fontWeight: FontWeight.w700,
+                                  color:  Colors.black,
                               ),
                             ),
                             TextSpan(
                               text: " times today.",
                               style: TextStyle(
                                   fontSize: 13,
-                                  fontWeight: FontWeight.w300,
-                                  color: Colors.black
+                                  fontWeight: FontWeight.w400,
+                                  color:  Colors.black,
                               ),
                             ),
                           ]
@@ -418,42 +309,22 @@ class HeaderWidget extends StatelessWidget {
               ),
             ],
           ),
-          Container(
-            child: RaisedButton(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0)),
-              color: Color(0xff04aef5),
-              child: Row(
-                children: [
-                  SvgPicture.asset(
-                    'assets/images/cctv.svg',
-                    width: 20,
-                    color: Colors.white,
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    "Open CCTV",
-                    style: TextStyle(
-                        color: Colors.white,
-                        letterSpacing: 1,
-                        fontWeight: FontWeight.w400
-                    ),
-                  )
-                ],
+          InkWell(
+            child: Hero(
+              tag: "user_picture",
+              child: CircleAvatar(
+                backgroundImage: NetworkImage(user.photoURL),
               ),
-              onPressed: () {
-                openCCTV();
-              },
             ),
-            decoration: BoxDecoration(
-                boxShadow: <BoxShadow>[
-                  BoxShadow(color: Colors.blue.withOpacity(0.3), blurRadius: 20)
-                ]
-            ),
-          )
+            onTap: (){
+              Navigator.push(context, PageTransition(type: PageTransitionType.rightToLeftWithFade, child: SettingPage(user: user,)));
+            },
+          ),
         ],
       ),
     );
   }
+
 }
 
 class InfoWidget extends StatelessWidget {
@@ -462,52 +333,386 @@ class InfoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      width: MediaQuery.of(context).size.width/1.3,
+      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+      width: MediaQuery.of(context).size.width/1.2,
       decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
-              spreadRadius: 10,
+              color: Color(0xffBE3D60).withOpacity(0.1),
+              blurRadius: 15,
+              spreadRadius: 1,
+              offset: Offset(0, 5),
             )
           ]
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(DateFormat.MMMM().add_y().format(DateTime.now()), style: TextStyle(color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.bold)),
-          Container(height: 0.1, color: Colors.black, margin: const EdgeInsets.symmetric(vertical: 10),),
+          Text("Total Visitor", style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500, fontSize: 15,),),
+          SizedBox(height: 12,),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Monthly Records", style: TextStyle(color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500)),
-                  SizedBox(height: 5),
                   Text(
                     "${counter.monthCount}",
-                    style: TextStyle(fontWeight: FontWeight.w300),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      color: Colors.black,
+                      fontSize: 19,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
+                  SizedBox(height: 5),
+                  Text("Monthly Records", style: TextStyle(color: Colors.black.withOpacity(0.6),),),
                 ],
               ),
               Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Annual Records", style: TextStyle(color: Colors.black.withOpacity(0.6), fontWeight: FontWeight.w500)),
-                  SizedBox(height: 5),
                   Text("${counter.yearCount}",
-                    style: TextStyle(fontWeight: FontWeight.w300),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      color: Colors.black,
+                      fontSize: 19,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
+                  SizedBox(height: 5),
+                  Text("Annual Records", style: TextStyle(color: Colors.black.withOpacity(0.6),),),
+
                 ],
               ),
             ],
           ),
+          SizedBox(height: 23,),
+          Text("Widgets", style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500, fontSize: 15,),),
+          SizedBox(height: 12,),
+          Container(
+            width: double.infinity,
+            child: SingleChildScrollView(
+              physics: ScrollPhysics(),
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  buildBellButton(context),
+                  SizedBox(width: 15,),
+                  buildCctvButton(),
+                  SizedBox(width: 15,),
+                  buildAddWidgetButton(),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Container buildBellButton(BuildContext context) {
+    return Container(
+      width: 55,
+      height: 55,
+      decoration: BoxDecoration(
+        color: Color(0xffBE3D60),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [BoxShadow(color: Color(0xffBE3D60).withOpacity(0.7), blurRadius: 2)],
+      ),
+      child: Material(
+        clipBehavior: Clip.antiAlias,
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.notifications_active_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+              SizedBox(height: 5,),
+              Text(
+                "Bell",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              )
+            ],
+          ),
+          onTap: () async{
+
+            final dialog = await showAlertDialog<OkCancelResult>(
+              context: context,
+              title: "Ring the bell?",
+              message: "Your doorbell will be ringing",
+              barrierDismissible: true,
+              style: AdaptiveStyle.cupertino,
+              actions: [
+                AlertDialogAction(
+                    label: "Cancel",
+                    isDefaultAction: true,
+                    key: OkCancelResult.cancel),
+                AlertDialogAction(
+                  label: "Yes",
+                  key: OkCancelResult.ok,
+                ),
+              ],
+            );
+
+            if(dialog==OkCancelResult.ok) _firebaseDatabaseRepository.setAlarmOn();
+
+          },
+        ),
+      ),
+    );
+  }
+
+  Container buildCctvButton() {
+
+    return Container(
+      width: 55,
+      height: 55,
+      decoration: BoxDecoration(
+        color: Color(0xffBE3D60),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [BoxShadow(color: Color(0xffBE3D60).withOpacity(0.7), blurRadius: 2)],
+      ),
+      child: Material(
+        clipBehavior: Clip.antiAlias,
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SvgPicture.asset(
+                'assets/images/cctv.svg',
+                width: 20,
+                color: Colors.white,
+              ),
+              SizedBox(height: 5,),
+              Text(
+                "Cam",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              )
+            ],
+          ),
+          onTap: (){
+            openCCTV();
+          },
+        ),
+      ),
+    );
+
+  }
+
+  Container buildAddWidgetButton() {
+    return Container(
+      width: 55,
+      height: 55,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 2)],
+      ),
+      child: Material(
+        clipBehavior: Clip.antiAlias,
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.add,
+                color: Colors.black.withOpacity(0.4),
+                size: 20,
+              ),
+              SizedBox(height: 5,),
+              Text(
+                "Add",
+                style: TextStyle(
+                  color: Colors.black.withOpacity(0.4),
+                  letterSpacing: 1,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+}
+
+class VisitorsRecordsWidget extends StatelessWidget {
+
+  final List visitorLog;
+  final ScrollController _scrollController = ScrollController(initialScrollOffset: 0);
+
+  VisitorsRecordsWidget({@required this.visitorLog,});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        width: MediaQuery.of(context).size.width/1.2,
+        padding: const EdgeInsets.only(bottom: 5, left: 17, right: 17, top: 20,),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xffBE3D60).withOpacity(0.1),
+                blurRadius: 15,
+                spreadRadius: 1,
+                offset: Offset(0, 5),
+              )
+            ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Visitor Records", style: TextStyle(fontSize: 15, color: Colors.black, fontWeight: FontWeight.w500),),
+                    SizedBox(height: 5,),
+                    Text(DateFormat.MMMM().add_y().format(DateTime.now()), style: TextStyle(color: Colors.black.withOpacity(0.6), fontSize: 12,),),
+                  ],
+                ),
+                PopupMenuButton(
+                  child: Icon(Icons.more_vert_rounded, size: 20, color: Colors.black.withOpacity(0.6),),
+                  onSelected: (value) {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text("Delete Records"),
+                          content: Text("Are you sure want to delete all records?"),
+                          actions: [
+                            FlatButton(child: Text("CANCEL"), onPressed: () => {Navigator.pop(context),},),
+                            FlatButton(
+                              child: Text("DELETE"),
+                              onPressed: () {
+                                _firebaseDatabaseRepository.deleteRecords();
+                                Navigator.pop(context);
+                              },
+                            )
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  itemBuilder: (BuildContext context) {
+                    return <PopupMenuEntry<String>>[
+                      PopupMenuItem<String>(
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete,
+                              size: 20,
+                              color: Colors.red.withOpacity(0.9),
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              "Delete records",
+                              style: TextStyle(
+                                color: Colors.black.withOpacity(0.6),
+                              ),
+                            )
+                          ],
+                        ),
+                        value: "delete",
+                      )
+                    ];
+                  },
+                )
+              ],
+            ),
+            SizedBox(height: 10,),
+            Container(
+              height: 400,
+              child: Stack(
+                children: [
+                  Scrollbar(
+                    thickness: 4,
+                    controller: _scrollController,
+                    radius: Radius.circular(30),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      controller: ScrollController(keepScrollOffset: true),
+                      itemCount: visitorLog.length,
+                      itemBuilder: (context, index) {
+                        return  Column(
+                          children: [
+                            index==0 ? SizedBox(height: 14,) : Container(),
+                            visitorListWidget(unixTime: visitorLog[index]),
+                            (index+1) == visitorLog.length ? Container() : Container(height: 0.1, color: Colors.black,),
+                            index+1==visitorLog.length ? SizedBox(height: 14,) : Container(),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.white,
+                            Theme.of(context).scaffoldBackgroundColor.withOpacity(0.0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.white,
+                            Theme.of(context).scaffoldBackgroundColor.withOpacity(0.0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ),
+          ],
+        )
     );
   }
 }
@@ -516,32 +721,44 @@ class visitorListWidget extends StatelessWidget {
 
   final int unixTime;
 
-  const visitorListWidget({Key key, this.unixTime}) : super(key: key);
+  visitorListWidget({Key key, this.unixTime}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
 
     DateTime _date = DateTime.fromMillisecondsSinceEpoch(unixTime);
+    DateTime _dateNow = DateTime.now();
+    bool isToday = _date.isSameDay(_dateNow);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
-      width: MediaQuery.of(context).size.width/1.3,
+      width: MediaQuery.of(context).size.width/1.2,
       child: IntrinsicHeight(
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CircleAvatar(
-              radius: 15,
-              child: Text(DateFormat.d().format(_date), style: TextStyle(fontSize:15, fontWeight: FontWeight.w300),),
-              foregroundColor: Colors.black.withOpacity(0.5),
-              backgroundColor: Colors.black.withOpacity(0.1),
-            ),
-            VerticalDivider(),
+            Text(DateFormat.d().format(_date), style: TextStyle(fontSize:14, fontWeight: FontWeight.bold, color: Colors.black,),),
+            VerticalDivider(width: 20,),
             Expanded(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(DateFormat.Hms().format(_date), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w300)),
-                  Text(formatTime(unixTime), style: TextStyle(fontWeight: FontWeight.w300))
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        DateFormat.Hms().format(_date),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      isToday ? SizedBox(width: 7,) : Container(),
+                      isToday ? buildToday() : Container(),
+                    ],
+                  ),
+                  Text(formatTime(unixTime), style: TextStyle(fontWeight: FontWeight.w400, color: Colors.black, fontSize: 13,))
                 ],
               ),
             ),
@@ -550,5 +767,25 @@ class visitorListWidget extends StatelessWidget {
       ),
     );
   }
-}
 
+  Align buildToday(){
+    return Align(
+      alignment: Alignment.bottomLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+        decoration: BoxDecoration(
+            color: Color(0xffBE3D60),
+            borderRadius: BorderRadius.circular(10)
+        ),
+        child: Text(
+          "today",
+          style: TextStyle(
+            color: Colors.white.withOpacity(1),
+            fontWeight: FontWeight.w300
+          ),
+        ),
+      ),
+    );
+  }
+  
+}

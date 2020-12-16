@@ -1,6 +1,11 @@
+import 'dart:convert';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:intl/intl.dart';
 import 'package:manyaran_system/models/counter.dart';
 import 'package:manyaran_system/models/devicestatus.dart';
+import 'package:manyaran_system/models/user_registered.dart';
 import 'package:time_formatter/time_formatter.dart';
 
 class FirebaseDatabaseRepository{
@@ -92,4 +97,35 @@ class FirebaseDatabaseRepository{
     return await databaseReference.child('visitors').remove();
   }
 
+  Future registerUser(User user) async{
+    DateTime dateTime = DateTime.now();
+    String dateFormat = DateFormat("dd-MM-yyyy HH:mm:ss").format(dateTime);
+    await databaseReference.child('app').child('users').child(user.uid).child('name').set(user.displayName);
+    await databaseReference.child('app').child('users').child(user.uid).child('email').set(user.email);
+    await databaseReference.child('app').child('users').child(user.uid).child('avatar').set(user.photoURL);
+    await databaseReference.child('app').child('users').child(user.uid).child('createdDate').set(dateFormat);
+    await databaseReference.child('app').child('users').child(user.uid).child('createdUnix').set(dateTime.millisecondsSinceEpoch);
+    await databaseReference.child('app').child('users').child(user.uid).child('access').set(false);
+  }
+
+  Future<bool> isUserRegistered(String idToken) async{
+    DataSnapshot dataSnapshot = await databaseReference.child('app').child('users').child(idToken).once();
+    return dataSnapshot.value!=null;
+  }
+
+  Future<bool> isUserAllowed(String idToken) async{
+    DataSnapshot dataSnapshot = await databaseReference.child('app').child('users').child(idToken).child('access').once();
+    print(dataSnapshot.value);
+    return dataSnapshot.value;
+  }
+
+  Future<DataSnapshot> getUserRegistered() async{
+    DataSnapshot dataSnapshot = await databaseReference.child('app').child('users').once();
+    return dataSnapshot;
+  }
+
+  Future setAccess(String idToken, bool access) async{
+    await databaseReference.child('app').child('users').child(idToken).child('access').set(access);
+  }
+  
 }

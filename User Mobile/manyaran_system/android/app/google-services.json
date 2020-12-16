@@ -23,6 +23,14 @@
           }
         },
         {
+          "client_id": "12045318817-pm0ie8jnincmm68tavavnhmfneg5tai9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alkalynx.manyaran_system",
+            "certificate_hash": "78e819bf04ba56fd832ccbf7583be732c3ec85a7"
+          }
+        },
+        {
           "client_id": "12045318817-sheu5i675fv5hhk07d24gs4mc4g5v1mi.apps.googleusercontent.com",
           "client_type": 3
         }
