@@ -1,5 +1,5 @@
-class Constant{
 
+class Constant{
 
 
 }

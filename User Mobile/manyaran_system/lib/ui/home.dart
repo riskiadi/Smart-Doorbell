@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/widgets.dart';
-import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:device_apps/device_apps.dart';
@@ -147,8 +146,6 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
                 SizedBox(height: 15),
-                // cameraViewer(),
-                SizedBox(height: 15),
                 FutureBuilder(
                   future: _firebaseDatabaseRepository.getVisitors(),
                   builder: (context, AsyncSnapshot<List<int>> snapshot) {
@@ -166,20 +163,6 @@ class _HomePageState extends State<HomePage> {
             ),
           )),
     );
-  }
-
-}
-
-class cameraViewer extends StatelessWidget {
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(child: VlcPlayer(
-      controller: VlcPlayerController(),
-      aspectRatio: 480,
-      url: 'rtsp://192.168.100.17',
-      placeholder: Container(child: Text('Cam Ready!'),),
-    ),);
   }
 
 }

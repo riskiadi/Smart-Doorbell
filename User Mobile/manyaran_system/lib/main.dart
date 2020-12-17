@@ -1,3 +1,4 @@
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -10,11 +11,13 @@ Future<void> main() async {
   await GetStorage.init();
   await Firebase.initializeApp();
   User user = FirebaseAuth.instance.currentUser;
+
   if(user != null){
     runApp(MyApp(page: HomePage(user: user,),));
   }else{
     runApp(MyApp(page: LoginPage(),));
   }
+
 }
 
 class MyApp extends StatelessWidget {
