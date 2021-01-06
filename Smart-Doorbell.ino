@@ -108,9 +108,15 @@ void sendNotification(){
     rawtime = timeClient.getEpochTime();
     ti = localtime (&rawtime);
     int month = (ti->tm_mon + 1) < 10 ? 0 + (ti->tm_mon + 1) : (ti->tm_mon + 1);
+    String monthString = ""
+    if(month<10){
+      monthString = "0" + (String)month;
+    }else{
+      monthString = (String)month;
+    }
     int year = ti->tm_year + 1900;
     json.set("date", (int)timeClient.getEpochTime());
-    Firebase.pushJSON(firebaseData, "visitors/" + (String)year + "/" + (String)month , json);
+    Firebase.pushJSON(firebaseData, "visitors/" + (String)year + "/" + monthString , json);
 
     http.end();
     client.stop();

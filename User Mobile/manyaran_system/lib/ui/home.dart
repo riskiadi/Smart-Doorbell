@@ -47,7 +47,6 @@ class _HomePageState extends State<HomePage> {
   StreamSubscription visitorSubscription;
 
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _isPressed = false;
 
   @override
   void initState() {
@@ -631,68 +630,70 @@ class VisitorsRecordsWidget extends StatelessWidget {
               ],
             ),
             SizedBox(height: 10,),
-            Container(
-              height: 400,
-              child: Stack(
-                children: [
-                  Scrollbar(
-                    thickness: 4,
-                    controller: _scrollController,
-                    radius: Radius.circular(30),
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      controller: ScrollController(keepScrollOffset: true),
-                      itemCount: visitorLog.length,
-                      itemBuilder: (context, index) {
-                        return  Column(
-                          children: [
-                            index==0 ? SizedBox(height: 14,) : Container(),
-                            visitorListWidget(unixTime: visitorLog[index]),
-                            (index+1) == visitorLog.length ? Container() : Container(height: 0.1, color: Colors.black,),
-                            index+1==visitorLog.length ? SizedBox(height: 14,) : Container(),
-                          ],
-                        );
-                      },
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: 400, minHeight: 0),
+              child: Container(
+                child: Stack(
+                  children: [
+                    Scrollbar(
+                      thickness: 4,
+                      controller: _scrollController,
+                      radius: Radius.circular(30),
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        controller: ScrollController(keepScrollOffset: true),
+                        itemCount: visitorLog.length,
+                        itemBuilder: (context, index) {
+                          return  Column(
+                            children: [
+                              index==0 ? SizedBox(height: 14,) : Container(),
+                              visitorListWidget(unixTime: visitorLog[index]),
+                              (index+1) == visitorLog.length ? Container() : Container(height: 0.1, color: Colors.black,),
+                              index+1==visitorLog.length ? SizedBox(height: 14,) : Container(),
+                            ],
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.white,
-                            Theme.of(context).scaffoldBackgroundColor.withOpacity(0.0),
-                          ],
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.white,
+                              Theme.of(context).scaffoldBackgroundColor.withOpacity(0.0),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            Colors.white,
-                            Theme.of(context).scaffoldBackgroundColor.withOpacity(0.0),
-                          ],
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [
+                              Colors.white,
+                              Theme.of(context).scaffoldBackgroundColor.withOpacity(0.0),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              )
+                  ],
+                )
+              ),
             ),
           ],
         )
