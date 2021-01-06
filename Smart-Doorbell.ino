@@ -108,7 +108,7 @@ void sendNotification(){
     rawtime = timeClient.getEpochTime();
     ti = localtime (&rawtime);
     int month = (ti->tm_mon + 1) < 10 ? 0 + (ti->tm_mon + 1) : (ti->tm_mon + 1);
-    String monthString = ""
+    String monthString = "";
     if(month<10){
       monthString = "0" + (String)month;
     }else{
