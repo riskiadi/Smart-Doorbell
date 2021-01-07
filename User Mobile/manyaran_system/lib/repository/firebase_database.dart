@@ -22,7 +22,7 @@ class FirebaseDatabaseRepository{
     int unixTime;
     DateTime dateTime = DateTime.now();
     Map<dynamic, dynamic> visitors;
-    DataSnapshot dataSnapshot = await databaseReference.child('visitors').child(dateTime.year.toString()).child(dateTime.month.toString()).once();
+    DataSnapshot dataSnapshot = await databaseReference.child('visitors').child(dateTime.year.toString()).child(DateFormat("MM").format(dateTime).toString()).once();
     visitors = dataSnapshot.value;
     visitors.forEach((key, value) {
       unixTime = visitors[key]["date"] * 1000;
