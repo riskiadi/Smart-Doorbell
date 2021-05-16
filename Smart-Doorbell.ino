@@ -27,7 +27,7 @@ FirebaseData firebaseData;
 FirebaseJson json;
 time_t rawtime;
 struct tm * ti;
-Neotimer neoTimer = Neotimer(8000); // timer set push button every 4 second
+Neotimer neoTimer = Neotimer(6000); // timer set push button every 4 second
 
 // Define NTP Client to get time
 const long utcOffsetInSeconds = -18; // Time offset GMT+7 in UTC 3600 = 1 hour
@@ -39,7 +39,7 @@ int fcmHttpCode = 0;
 bool isSend = false;
 
 void setup() {
-  Serial.begin(9600);
+  
   pinMode(TRIGGER_PIN, INPUT);
 
   //Initiate Setup
@@ -66,12 +66,14 @@ void setup() {
 }
 
 void loop() {
+  SerialAndTelnet.handle();
   ArduinoOTA.handle();
   checkButton();
+  telnetCommandListener();
 
   timeClient.update();
-  Serial.println(digitalRead(PIN_TOUCH));
- 
+  
+  //Serial.println(digitalRead(PIN_TOUCH));
   if(digitalRead(PIN_TOUCH) == 1){
     if(neoTimer.done()){
       Firebase.setBool(firebaseData, "doorbell/isOn", true);
@@ -80,6 +82,8 @@ void loop() {
       neoTimer.start();
     }
   }
+
+  delay(30);
   
 }
 
@@ -129,28 +133,27 @@ void sendNotification(){
   
 }
 
-
 void setupInitialization(){
+  SERIAL.begin(9600);
   WiFi.mode(WIFI_STA);
-  Serial.setDebugOutput(true);  
   std::vector<const char *> menu = {"wifi","sep","restart"};
   wm.setMenu(menu);
   wm.setClass("invert"); // set dark theme
-  wm.setConnectTimeout(20); // how long to try to connect for before continuing
+  wm.setConnectTimeout(30); // how long to try to connect for before continuing
+  wm.setConfigPortalTimeout(40);
   bool res;
   res = wm.autoConnect(); // auto generated AP name from chipid
   if(!res) {
-    Serial.println("Failed to connect or hit timeout");
+    SERIAL.println("Failed to connect or hit timeout");
     ESP.restart();
   } 
   else {
-    Serial.print("Wifi Connected: ");
-    Serial.println(WiFi.localIP());
-    checkOTA();
+    OTASetup();
+    telnetSetup();
   }
 }
 
-void checkOTA(){
+void OTASetup(){
   ArduinoOTA.onStart([]() {
       String type;
       if (ArduinoOTA.getCommand() == U_FLASH) {
@@ -160,30 +163,36 @@ void checkOTA(){
       }
   
       // NOTE: if updating FS this would be the place to unmount FS using FS.end()
-      Serial.println("Start updating " + type);
+      SERIAL.println("Start updating " + type);
     });
     ArduinoOTA.onEnd([]() {
-      Serial.println("\nEnd");
+      SERIAL.println("\nEnd");
     });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+      SERIAL.printf("Progress: %u%%\r", (progress / (total / 100)));
     });
     ArduinoOTA.onError([](ota_error_t error) {
       Serial.printf("Error[%u]: ", error);
       if (error == OTA_AUTH_ERROR) {
-        Serial.println("Auth Failed");
+        SERIAL.println("Auth Failed");
       } else if (error == OTA_BEGIN_ERROR) {
-        Serial.println("Begin Failed");
+        SERIAL.println("Begin Failed");
       } else if (error == OTA_CONNECT_ERROR) {
-        Serial.println("Connect Failed");
+        SERIAL.println("Connect Failed");
       } else if (error == OTA_RECEIVE_ERROR) {
-        Serial.println("Receive Failed");
+        SERIAL.println("Receive Failed");
       } else if (error == OTA_END_ERROR) {
-        Serial.println("End Failed");
+        SERIAL.println("End Failed");
       }
     });
     ArduinoOTA.begin();
-    Serial.println("OTA Ready");
+}
+
+void telnetSetup(){
+  SerialAndTelnet.setWelcomeMsg("Welcome to the ESP via TelnetSpy\n");
+  SerialAndTelnet.setCallbackOnConnect(telnetConnected);
+  delay(100); // Wait for serial port
+  SERIAL.setDebugOutput(false);
 }
 
 void checkButton(){
@@ -202,4 +211,47 @@ void checkButton(){
       }
     }
   }
+}
+
+void telnetConnected() {
+  SERIAL.println("");
+  SERIAL.println("Telnet connection established.");
+  SERIAL.print("IP: ");
+  SERIAL.println(WiFi.localIP());
+  SERIAL.println("\nAvailable Commands:");
+  SERIAL.println("Type 'r' for WiFi reconnect.");
+  SERIAL.println("Type 'R' for ESP restart.");
+  SERIAL.println("");
+}
+
+void telnetCommandListener(){
+  if (SERIAL.available() > 0) {
+    char c = SERIAL.read();
+    switch (c) {
+      case '\r':
+        SERIAL.println();
+        break;
+      case 'r':
+        SERIAL.print("\nReconnecting ");
+        WiFi.reconnect();
+        while (WiFi.status() == WL_CONNECTED) {
+          delay(500);
+          SERIAL.print(".");
+        }
+        SERIAL.println(" Disconnected!");
+        while (WiFi.status() != WL_CONNECTED) {
+          delay(500);
+          SERIAL.print(".");
+        }
+        SERIAL.println(" Connected!");
+        break;
+      case 'R':
+        SERIAL.println("Esp restart");
+        ESP.restart();
+        break;
+      default:
+        SERIAL.print(c);
+        break;
+    }
+  }  
 }
