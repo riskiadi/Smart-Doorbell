@@ -221,6 +221,7 @@ void telnetConnected() {
   SERIAL.println("\nAvailable Commands:");
   SERIAL.println("Type 'r' for WiFi reconnect.");
   SERIAL.println("Type 'R' for ESP restart.");
+  SERIAL.println("Type 'w' for Wifi restart setting config.");
   SERIAL.println("");
 }
 
@@ -247,6 +248,11 @@ void telnetCommandListener(){
         break;
       case 'R':
         SERIAL.println("Esp restart");
+        ESP.restart();
+        break;
+      case 'w':
+        SERIAL.println("Wifi Reset Setting");
+        wm.resetSettings();
         ESP.restart();
         break;
       default:
