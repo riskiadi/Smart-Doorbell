@@ -43,13 +43,18 @@ Smart Doorbell is an Internet of Things (IoT) project, integrating a doorbell wi
 
 ### Project Images
 
-<p align="center">
-  <img src="/_images/img1.jpg" width=400px" height="300px" alt="image1">
-  <img src="/_images/img4.jpg" width="400px" height="300px" alt="image2"/>
-  <img src="/_images/img2.jpg" width="350px" height="550px" alt="image3"/>
-  <img src="/_images/img3.jpg" width="350px" height="550px" alt="image4"/>
-</p>
- 
-
-
+<table>
+  <tr>
+    <td><img src="/_images/img1.jpg" width=400px" height="450px" alt="image1"></td>
+  </tr>
+  <tr>
+    <td><img src="/_images/img2.jpg" width="430px" height="500px" alt="image3"/></td>
+  </tr>
+  <tr>
+    <td><img src="/_images/img3.jpg" width="400px" height="700px" alt="image4"/></td>
+  </tr>
+  <tr>
+    <td><img src="/_images/img4.jpg" width="400px" height="300px" alt="image2"/></td>
+  </tr>
+</table>
 
