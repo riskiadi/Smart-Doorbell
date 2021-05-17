@@ -1,7 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266WiFiMulti.h>
-#include <WiFiClientSecure.h>
 #include <FirebaseESP8266.h>
 #include <ESP8266HTTPClient.h>
 #include "Neotimer.h"
@@ -17,12 +16,11 @@
 #define TRIGGER_PIN 0 //NODEMCU FLASH BUTTON RESET WIFI AUTH
 #define FIREBASE_HOST "manyaran-sistem.firebaseio.com"
 #define FIREBASE_AUTH "vGw7kpq6yTrIjPLVVciDBpqMoZxAkmaERSVRqZWt"
+#define FIREBASE_FCM_SERVER_KEY "AAAAAs30-qE:APA91bH2N8b_Lfp7B4aKMbKwPFedzwVWP3ffe_gPbwLdIE4jStahP5dQZ3AuVRnoGum-1LU8iWQZ8gT5DnkGYKL66LBN3w7nMYZYOwSiaa7IQZEEDWV64HTmnctWPzBvzne3gYmcWunn"
 #define PIN_TOUCH 12
 
 WiFiManager wm;
 TelnetSpy SerialAndTelnet;
-BearSSL::WiFiClientSecure client;
-HTTPClient http;
 FirebaseData firebaseData;
 FirebaseJson json;
 time_t rawtime;
@@ -30,13 +28,9 @@ struct tm * ti;
 Neotimer neoTimer = Neotimer(6000); // timer set push button every 4 second
 
 // Define NTP Client to get time
-const long utcOffsetInSeconds = -18; // Time offset GMT+7 in UTC 3600 = 1 hour
+const long utcOffsetInSeconds = 3600*7; // Time offset GMT+7 in UTC 3600 = 1 hour
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "id.pool.ntp.org", utcOffsetInSeconds);
-
-int httpCode = 0;
-int fcmHttpCode = 0;
-bool isSend = false;
+NTPClient timeClient(ntpUDP, "id.pool.ntp.org", utcOffsetInSeconds, 60000);
 
 void setup() {
   
@@ -45,22 +39,23 @@ void setup() {
   //Initiate Setup
   setupInitialization();
 
-  //Initiate Firebase
+  //Initiate Firebase Features
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+  Firebase.reconnectWiFi(true);
+  firebaseData.setBSSLBufferSize(1024, 1024);
+  firebaseData.setResponseSize(1024);
+  firebaseData.fcm.begin(FIREBASE_FCM_SERVER_KEY);
+  firebaseData.fcm.setPriority("high");
+  firebaseData.fcm.setTopic("Doorbell");
+  firebaseData.fcm.setTimeToLive(5000);
 
   //Get NTP time
   timeClient.begin();
+  timeClient.update();
   
-  //fcm client
-  client.setInsecure();
-  client.setTimeout(10000);
-  client.connect("fcm.googleapis.com", 443);  
-
   neoTimer.start();
-  firebaseData.setResponseSize(1024);
 
   //send First device startup time
-  timeClient.update();
   Firebase.setInt(firebaseData, "bellbutton/firstBoot", timeClient.getEpochTime());
   
 }
@@ -73,64 +68,58 @@ void loop() {
 
   timeClient.update();
   
-  //Serial.println(digitalRead(PIN_TOUCH));
   if(digitalRead(PIN_TOUCH) == 1){
     if(neoTimer.done()){
-      Firebase.setBool(firebaseData, "doorbell/isOn", true);
+      SERIAL.println("Sensor triggered.");
+      firebasePush();
       sendNotification();
       neoTimer.stop();
       neoTimer.start();
     }
   }
-
-  delay(30);
   
 }
 
 
-
 void sendNotification(){
- client.setInsecure();
- client.setTimeout(10000);
- client.connect("fcm.googleapis.com", 443); 
- if(!client.connected()) {
-   Serial.println("Failed to connect using insecure client, check internet connection or try to use fingerprint..");
-   sendNotification();
- }else{
-    Serial.println("[Success to connect]");
-    Serial.println("--------");
-    Serial.print("Sending post request...");
-    http.begin(client,"https://fcm.googleapis.com/fcm/send");
-    http.addHeader("User-Agent", "PostmanRuntime/7.26.5");
-    http.addHeader("Connection", "keep-alive");
-    http.addHeader("Content-Type", "application/json");
-    http.addHeader("Authorization", "key=AAAAAs30-qE:APA91bH2N8b_Lfp7B4aKMbKwPFedzwVWP3ffe_gPbwLdIE4jStahP5dQZ3AuVRnoGum-1LU8iWQZ8gT5DnkGYKL66LBN3w7nMYZYOwSiaa7IQZEEDWV64HTmnctWPzBvzne3gYmcWunn");
-    fcmHttpCode = http.POST("{ \"to\":\"/topics/Doorbell\", \"priority\" : \"high\", \"notification\":{ \"title\":\"Manyaran Sistem\", \"body\":\"Seseorang mengunjungi rumah anda.\", \"sound\":\"notification.mp3\", \"android_channel_id\":\"manyaran_id\", \"tag\": \"tag1\", \"click_action\":\"FLUTTER_NOTIFICATION_CLICK\" } }");
-    Serial.print("Post request completed, ");
-    Serial.print("status code: ");
-    Serial.println(fcmHttpCode);
-    Serial.println("--------");
-    
-    //Send visitor history
-    rawtime = timeClient.getEpochTime();
-    ti = localtime (&rawtime);
-    int month = (ti->tm_mon + 1) < 10 ? 0 + (ti->tm_mon + 1) : (ti->tm_mon + 1);
-    String monthString = "";
-    if(month<10){
-      monthString = "0" + (String)month;
+    firebaseData.fcm.addCustomNotifyMessage("title", "Manyaran Sistem");
+    firebaseData.fcm.addCustomNotifyMessage("body", "Seseorang mengunjungi rumah anda (" + timeClient.getFormattedTime() + ").");
+    firebaseData.fcm.addCustomNotifyMessage("sound", "notification.mp3");
+    firebaseData.fcm.addCustomNotifyMessage("android_channel_id", "manyaran_id");
+    firebaseData.fcm.addCustomNotifyMessage("tag", "tag1");
+    firebaseData.fcm.addCustomNotifyMessage("click_action", "FLUTTER_NOTIFICATION_CLICK");
+    SERIAL.println("------------------------------------");
+    SERIAL.println("Send Firebase Cloud Messaging...");
+    if (Firebase.sendTopic(firebaseData)){
+        SERIAL.println("NOTIFICATION PASSED");
+        SERIAL.println(firebaseData.fcm.getSendResult());
+        SERIAL.println("------------------------------------");
+        SERIAL.println();
     }else{
-      monthString = (String)month;
-    }
-    int year = ti->tm_year + 1900;
-    
-    json.set("date", (int)timeClient.getEpochTime());
-    Firebase.pushJSON(firebaseData, "visitors/" + (String)year + "/" + monthString , json);
+        SERIAL.println("NOTIFICATION FAILED");
+        SERIAL.println("REASON: " + firebaseData.errorReason());
+        SERIAL.println("------------------------------------");
+        SERIAL.println();
+     }
+}
 
-    http.end();
-    client.stop();
-    
+void firebasePush(){
+  SERIAL.println("Firebase push visitor data\n");
+  Firebase.setBool(firebaseData, "doorbell/isOn", true);
+
+  unsigned long epochTime = timeClient.getEpochTime();
+  struct tm *ptm = gmtime ((time_t *)&epochTime);
+  String currentMonth = "";
+  int monthInt = ptm->tm_mon+1;
+  int currentYear = ptm->tm_year+1900;
+  if(monthInt<10){
+    currentMonth = "0" + (String)monthInt;
+  }else{
+    currentMonth = (String)monthInt;
   }
   
+  json.set("date", (int)timeClient.getEpochTime());
+  Firebase.pushJSON(firebaseData, "visitors/" + (String)currentYear + "/" + currentMonth , json);
 }
 
 void setupInitialization(){
@@ -140,7 +129,7 @@ void setupInitialization(){
   wm.setMenu(menu);
   wm.setClass("invert"); // set dark theme
   wm.setConnectTimeout(30); // how long to try to connect for before continuing
-  wm.setConfigPortalTimeout(40);
+  wm.setConfigPortalTimeout(20);
   bool res;
   res = wm.autoConnect(); // auto generated AP name from chipid
   if(!res) {
@@ -213,15 +202,55 @@ void checkButton(){
   }
 }
 
+void wifiScanner(){
+  int n = WiFi.scanNetworks();
+  if (n == 0) {
+    SERIAL.println("no networks found");
+  } else {
+    SERIAL.print("\n[");
+    SERIAL.print(n);
+    SERIAL.println(" networks found]\n");
+    for (int i = 0; i < n; ++i) {
+      SERIAL.print(i + 1);
+      SERIAL.print(") ");
+      SERIAL.print(WiFi.SSID(i) + " ");
+      SERIAL.print(WiFi.RSSI(i));
+      SERIAL.print("dBm (");
+      SERIAL.print(dBmtoPercentage(WiFi.RSSI(i)));//Signal strength in %  
+      SERIAL.println("%)"); 
+      delay(10);
+    }
+  }
+  SERIAL.println("");
+  delay(5000);
+  WiFi.scanDelete();
+}
+
+int dBmtoPercentage(int dBm){
+  int quality;
+  if(dBm <= -100){
+    quality = 0;
+  }else if(dBm >= -50){ 
+    quality = 100;
+  }else{
+  quality = 2 * (dBm + 100);
+  }
+  return quality;
+}
+
 void telnetConnected() {
   SERIAL.println("");
   SERIAL.println("Telnet connection established.");
   SERIAL.print("IP: ");
   SERIAL.println(WiFi.localIP());
   SERIAL.println("\nAvailable Commands:");
-  SERIAL.println("Type 'r' for WiFi reconnect.");
   SERIAL.println("Type 'e' for ESP restart.");
+  SERIAL.println("Type 's' for Wifi scan network.");
+  SERIAL.println("Type 'r' for WiFi reconnect.");
   SERIAL.println("Type 'z' for Wifi restart setting config.");
+  SERIAL.println("Type 't' for Doorbell testing all.");
+  SERIAL.println("Type 'h' for Doorbell testing only ring.");
+  SERIAL.println("Type 'n' for Doorbell testing only notification.");
   SERIAL.println("");
 }
 
@@ -247,13 +276,24 @@ void telnetCommandListener(){
         SERIAL.println(" Connected!");
         break;
       case 'e':
-        SERIAL.println("Esp restart");
         ESP.restart();
         break;
       case 'z':
-        SERIAL.println("Wifi Reset Setting");
         wm.resetSettings();
         ESP.restart();
+        break;
+      case 't':
+        firebasePush();
+        sendNotification();
+        break;
+      case 'h':
+        firebasePush();
+        break;
+      case 'n':
+        sendNotification();
+        break;
+      case 's':
+        wifiScanner();
         break;
       default:
         SERIAL.print(c);
