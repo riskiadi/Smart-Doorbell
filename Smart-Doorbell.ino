@@ -19,13 +19,16 @@
 #define FIREBASE_FCM_SERVER_KEY "AAAAAs30-qE:APA91bH2N8b_Lfp7B4aKMbKwPFedzwVWP3ffe_gPbwLdIE4jStahP5dQZ3AuVRnoGum-1LU8iWQZ8gT5DnkGYKL66LBN3w7nMYZYOwSiaa7IQZEEDWV64HTmnctWPzBvzne3gYmcWunn"
 #define PIN_TOUCH 12
 
+//variables
+bool disableDoorbell = false;
+
 WiFiManager wm;
 TelnetSpy SerialAndTelnet;
 FirebaseData firebaseData;
 FirebaseJson json;
 time_t rawtime;
 struct tm * ti;
-Neotimer neoTimer = Neotimer(6000); // timer set push button every 4 second
+Neotimer neoTimer = Neotimer(1000); // timer set push button every 4 second
 
 // Define NTP Client to get time
 const long utcOffsetInSeconds = 3600*7; // Time offset GMT+7 in UTC 3600 = 1 hour
@@ -67,7 +70,7 @@ void loop() {
   telnetCommandListener();
 
   timeClient.update();
-  
+
   if(digitalRead(PIN_TOUCH) == 1){
     if(neoTimer.done()){
       SERIAL.println("Sensor triggered.");
@@ -82,6 +85,10 @@ void loop() {
 
 
 void sendNotification(){
+    if(disableDoorbell){
+      SERIAL.println("Doorbell disabled!");
+      return;
+    }
     firebaseData.fcm.addCustomNotifyMessage("title", "Manyaran Sistem");
     firebaseData.fcm.addCustomNotifyMessage("body", "Seseorang mengunjungi rumah anda (" + timeClient.getFormattedTime() + ").");
     firebaseData.fcm.addCustomNotifyMessage("sound", "notification.mp3");
@@ -104,6 +111,10 @@ void sendNotification(){
 }
 
 void firebasePush(){
+  if(disableDoorbell){
+    SERIAL.println("Doorbell disabled!");
+    return;
+  }
   SERIAL.println("Firebase push visitor data\n");
   Firebase.setBool(firebaseData, "doorbell/isOn", true);
 
@@ -226,6 +237,21 @@ void wifiScanner(){
   WiFi.scanDelete();
 }
 
+void reconnectWifi(){
+  SERIAL.println("\nReconnecting");
+  WiFi.reconnect();
+  while (WiFi.status() == WL_CONNECTED) {
+    delay(500);
+    SERIAL.print(".");
+  }
+  SERIAL.println("\nDisconnected!");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    SERIAL.print(".");
+  }
+  SERIAL.println("\nConnected!");
+}
+
 int dBmtoPercentage(int dBm){
   int quality;
   if(dBm <= -100){
@@ -244,13 +270,15 @@ void telnetConnected() {
   SERIAL.print("IP: ");
   SERIAL.println(WiFi.localIP());
   SERIAL.println("\nAvailable Commands:");
+  SERIAL.println("Type 'h' for help.");
   SERIAL.println("Type 'e' for ESP restart.");
   SERIAL.println("Type 's' for Wifi scan network.");
   SERIAL.println("Type 'r' for WiFi reconnect.");
-  SERIAL.println("Type 'z' for Wifi restart setting config.");
+  SERIAL.println("Type 'z' for Wifi restart configuration.");
   SERIAL.println("Type 't' for Doorbell testing all.");
-  SERIAL.println("Type 'h' for Doorbell testing only ring.");
+  SERIAL.println("Type 'b' for Doorbell testing only ring.");
   SERIAL.println("Type 'n' for Doorbell testing only notification.");
+  SERIAL.println("Type 'd' for Doorbell disable.");
   SERIAL.println("");
 }
 
@@ -262,18 +290,10 @@ void telnetCommandListener(){
         SERIAL.println();
         break;
       case 'r':
-        SERIAL.print("\nReconnecting ");
-        WiFi.reconnect();
-        while (WiFi.status() == WL_CONNECTED) {
-          delay(500);
-          SERIAL.print(".");
-        }
-        SERIAL.println(" Disconnected!");
-        while (WiFi.status() != WL_CONNECTED) {
-          delay(500);
-          SERIAL.print(".");
-        }
-        SERIAL.println(" Connected!");
+        reconnectWifi();
+        break;
+      case 'h':
+        telnetConnected();
         break;
       case 'e':
         ESP.restart();
@@ -286,17 +306,22 @@ void telnetCommandListener(){
         firebasePush();
         sendNotification();
         break;
-      case 'h':
+      case 'b':
         firebasePush();
         break;
       case 'n':
         sendNotification();
         break;
+      case 'd':
+        disableDoorbell = !disableDoorbell;
+        SERIAL.print("Doorbell disable = ");
+        SERIAL.println(disableDoorbell ? "true" : "false");
+        break;
       case 's':
         wifiScanner();
         break;
       default:
-        SERIAL.print(c);
+        SERIAL.println(c);
         break;
     }
   }  
