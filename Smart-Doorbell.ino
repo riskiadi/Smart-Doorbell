@@ -28,7 +28,7 @@ FirebaseData firebaseData;
 FirebaseJson json;
 time_t rawtime;
 struct tm * ti;
-Neotimer neoTimer = Neotimer(1000); // timer set push button every 4 second
+Neotimer neoTimer = Neotimer(2000); // timer set push button every 4 second
 
 // Define NTP Client to get time
 const long utcOffsetInSeconds = 3600*7; // Time offset GMT+7 in UTC 3600 = 1 hour
@@ -43,6 +43,7 @@ void setup() {
   setupInitialization();
 
   //Initiate Firebase Features
+  
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
   Firebase.reconnectWiFi(true);
   firebaseData.setBSSLBufferSize(1024, 1024);
@@ -58,9 +59,6 @@ void setup() {
   
   neoTimer.start();
 
-  //send First device startup time
-  Firebase.setInt(firebaseData, "bellbutton/firstBoot", timeClient.getEpochTime());
-  
 }
 
 void loop() {
@@ -85,10 +83,9 @@ void loop() {
 
 
 void sendNotification(){
-    if(disableDoorbell){
-      SERIAL.println("Doorbell disabled!");
-      return;
-    }
+  if(disableDoorbell){
+    SERIAL.println("Doorbell disabled!");
+  }else{
     firebaseData.fcm.addCustomNotifyMessage("title", "Manyaran Sistem");
     firebaseData.fcm.addCustomNotifyMessage("body", "Seseorang mengunjungi rumah anda (" + timeClient.getFormattedTime() + ").");
     firebaseData.fcm.addCustomNotifyMessage("sound", "notification.mp3");
@@ -108,29 +105,28 @@ void sendNotification(){
         SERIAL.println("------------------------------------");
         SERIAL.println();
      }
+  }
 }
 
 void firebasePush(){
   if(disableDoorbell){
     SERIAL.println("Doorbell disabled!");
-    return;
-  }
-  SERIAL.println("Firebase push visitor data\n");
-  Firebase.setBool(firebaseData, "doorbell/isOn", true);
-
-  unsigned long epochTime = timeClient.getEpochTime();
-  struct tm *ptm = gmtime ((time_t *)&epochTime);
-  String currentMonth = "";
-  int monthInt = ptm->tm_mon+1;
-  int currentYear = ptm->tm_year+1900;
-  if(monthInt<10){
-    currentMonth = "0" + (String)monthInt;
   }else{
-    currentMonth = (String)monthInt;
+    SERIAL.println("Firebase push visitor data\n");
+    Firebase.setBool(firebaseData, "doorbell/isOn", true);
+    unsigned long epochTime = timeClient.getEpochTime();
+    struct tm *ptm = gmtime ((time_t *)&epochTime);
+    String currentMonth = "";
+    int monthInt = ptm->tm_mon+1;
+    int currentYear = ptm->tm_year+1900;
+    if(monthInt<10){
+      currentMonth = "0" + (String)monthInt;
+    }else{
+      currentMonth = (String)monthInt;
+    }
+    json.set("date", (int)timeClient.getEpochTime());
+    Firebase.pushJSON(firebaseData, "visitors/" + (String)currentYear + "/" + currentMonth , json);
   }
-  
-  json.set("date", (int)timeClient.getEpochTime());
-  Firebase.pushJSON(firebaseData, "visitors/" + (String)currentYear + "/" + currentMonth , json);
 }
 
 void setupInitialization(){
@@ -138,7 +134,6 @@ void setupInitialization(){
   WiFi.mode(WIFI_STA);
   std::vector<const char *> menu = {"wifi","sep","restart"};
   wm.setMenu(menu);
-  wm.setClass("invert"); // set dark theme
   wm.setConnectTimeout(30); // how long to try to connect for before continuing
   wm.setConfigPortalTimeout(20);
   bool res;
@@ -148,6 +143,7 @@ void setupInitialization(){
     ESP.restart();
   } 
   else {
+    Firebase.setInt(firebaseData, "bellbutton/firstBoot", timeClient.getEpochTime());
     OTASetup();
     telnetSetup();
   }
