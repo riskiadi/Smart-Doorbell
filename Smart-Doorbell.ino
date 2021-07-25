@@ -21,6 +21,7 @@
 
 //variables
 bool disableDoorbell = false;
+IPAddress ip;
 
 WiFiManager wm;
 TelnetSpy SerialAndTelnet;
@@ -58,6 +59,11 @@ void setup() {
   timeClient.update();
   
   neoTimer.start();
+
+  // check booting status
+  ip = WiFi.localIP();
+  Firebase.setInt(firebaseData, "bellbutton/firstBoot", timeClient.getEpochTime());
+  Firebase.setString(firebaseData, "bellbutton/IPAddress", ip.toString().c_str());
 
 }
 
@@ -143,7 +149,6 @@ void setupInitialization(){
     ESP.restart();
   } 
   else {
-    Firebase.setInt(firebaseData, "bellbutton/firstBoot", timeClient.getEpochTime());
     OTASetup();
     telnetSetup();
   }

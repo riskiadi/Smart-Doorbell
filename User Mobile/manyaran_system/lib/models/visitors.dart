@@ -10,7 +10,7 @@ String visitorsToJson(Map<String, Visitors> data) => json.encode(Map.from(data).
 
 class Visitors {
   Visitors({
-    this.date,
+    required this.date,
   });
 
   final int date;

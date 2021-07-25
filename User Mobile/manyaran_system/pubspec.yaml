@@ -15,43 +15,42 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.1+4
+version: 1.0.2+5
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.0
-  firebase_messaging: ^7.0.0
-  firebase_database: ^4.1.1
-  shared_preferences: ^0.5.12+2
-  get_storage: ^1.3.2
-  flutter_svg: ^0.19.1
-  adaptive_dialog: ^0.9.3
-  device_apps: ^1.2.0
-  url_launcher: ^5.7.8
-  time_formatter: ^1.0.0
-  intl: ^0.16.1
-  vibration: ^1.7.1
-  recase: ^3.0.0
-  google_sign_in: ^4.5.6
-  firebase_auth: ^0.18.4+1
-  firebase_core: ^0.5.3
-  flutter_easyloading: ^2.2.1
-  page_transition: ^1.1.7+3
-  font_awesome_flutter: ^8.10.1
+
+  cupertino_icons: ^1.0.3
+  firebase_messaging: ^10.0.3
+  firebase_database: ^7.1.1
+  shared_preferences: ^2.0.6
+  get_storage: ^2.0.2
+  flutter_svg: ^0.22.0
+  adaptive_dialog: ^1.0.1
+  intl: ^0.17.0
+  recase: ^4.0.0
+  google_sign_in: ^5.0.4
+  firebase_auth: ^2.0.0
+  firebase_core: ^1.3.0
+  flutter_local_notifications: ^6.0.0
+  flutter_easyloading: ^3.0.0
+  page_transition: ^2.0.2
+  font_awesome_flutter: ^9.1.0
+  time_ago_provider: ^4.1.0
 
 dev_dependencies:
-  flutter_launcher_icons: ^0.8.1
+  flutter_launcher_icons: ^0.9.0
   flutter_test:
     sdk: flutter
 
 flutter_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/icon.png"
+  image_path: "assets/images/launcher.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -80,19 +79,12 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-#  fonts:
-#    - family: Montserrat
-#      fonts:
-#        - asset: assets/font/Montserrat-Thin.ttf
-#          weight: 100
-#        - asset: assets/font/Montserrat-Light.ttf
-#          weight: 300
-#        - asset: assets/font/Montserrat-Regular.ttf
-#          weight: 400
-#        - asset: assets/font/Montserrat-Medium.ttf
-#          weight: 500
-#        - asset: assets/font/Montserrat-Bold.ttf
-#          weight: 700
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
   #   - family: Trajan Pro
   #     fonts:
   #       - asset: fonts/TrajanPro.ttf

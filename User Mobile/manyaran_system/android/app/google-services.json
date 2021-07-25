@@ -15,6 +15,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "12045318817-4c1vrhpg8aq0pehgn031i4id7nue5r2s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alkalynx.manyaran_system",
+            "certificate_hash": "3d02f3ab1bfddf56cabb896b805cc16003749deb"
+          }
+        },
+        {
+          "client_id": "12045318817-86bngkj6tbuaddb4mnsgmuromk0fk2tu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alkalynx.manyaran_system",
+            "certificate_hash": "78e819bf04ba56fd832ccbf7583be732c3ec85a7"
+          }
+        },
+        {
           "client_id": "12045318817-nfcktp52c14l6ds8fiei0lr8827evsp7.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -23,11 +39,19 @@
           }
         },
         {
-          "client_id": "12045318817-pm0ie8jnincmm68tavavnhmfneg5tai9.apps.googleusercontent.com",
+          "client_id": "12045318817-ooaqnv1587bpvvp1fb7gaqgaeusnieer.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.alkalynx.manyaran_system",
-            "certificate_hash": "78e819bf04ba56fd832ccbf7583be732c3ec85a7"
+            "certificate_hash": "700d88a1b23285efab8cf86c40741d968513dd13"
+          }
+        },
+        {
+          "client_id": "12045318817-v9r20fr7amdc5jg6q6074vrldkmfhb4u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alkalynx.manyaran_system",
+            "certificate_hash": "3b36c14a3ef60c6f866c66f3dd2a22b8b00bbb90"
           }
         },
         {

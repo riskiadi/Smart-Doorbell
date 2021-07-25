@@ -1,8 +1,12 @@
-class DeviceStatus{
-
+class DeviceStatus {
   int buttonStatus;
   int bellStatus;
+  String buttonIP;
+  String bellIP;
 
-  DeviceStatus({this.buttonStatus, this.bellStatus});
-
+  DeviceStatus(
+      {required this.buttonStatus,
+      required this.bellStatus,
+      required this.buttonIP,
+      required this.bellIP});
 }
