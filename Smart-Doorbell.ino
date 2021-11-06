@@ -1,40 +1,29 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266WiFiMulti.h>
-#include <FirebaseESP8266.h>
+#include <WiFiClientSecure.h>
 #include <ESP8266HTTPClient.h>
 #include "Neotimer.h"
-#include <NTPClient.h>
-#include <time.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <TelnetSpy.h>  //external library https://github.com/yasheena/telnetspy
 
 //Define
+
+#define SERVER_IP "http://192.168.100.200/fcm_send/"
+
 #define SERIAL  SerialAndTelnet
 #define TRIGGER_PIN 0 //NODEMCU FLASH BUTTON RESET WIFI AUTH
-#define FIREBASE_HOST "manyaran-sistem.firebaseio.com"
-#define FIREBASE_AUTH "vGw7kpq6yTrIjPLVVciDBpqMoZxAkmaERSVRqZWt"
-#define FIREBASE_FCM_SERVER_KEY "AAAAAs30-qE:APA91bH2N8b_Lfp7B4aKMbKwPFedzwVWP3ffe_gPbwLdIE4jStahP5dQZ3AuVRnoGum-1LU8iWQZ8gT5DnkGYKL66LBN3w7nMYZYOwSiaa7IQZEEDWV64HTmnctWPzBvzne3gYmcWunn"
 #define PIN_TOUCH 12
 
 //variables
 bool disableDoorbell = false;
 IPAddress ip;
-
 WiFiManager wm;
 TelnetSpy SerialAndTelnet;
-FirebaseData firebaseData;
-FirebaseJson json;
-time_t rawtime;
 struct tm * ti;
-Neotimer neoTimer = Neotimer(2000); // timer set push button every 4 second
-
-// Define NTP Client to get time
-const long utcOffsetInSeconds = 3600*7; // Time offset GMT+7 in UTC 3600 = 1 hour
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "id.pool.ntp.org", utcOffsetInSeconds, 60000);
+Neotimer neoTimer = Neotimer(5000); // timer set push button every 4 second
 
 void setup() {
   
@@ -42,28 +31,11 @@ void setup() {
 
   //Initiate Setup
   setupInitialization();
-
-  //Initiate Firebase Features
-  
-  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
-  Firebase.reconnectWiFi(true);
-  firebaseData.setBSSLBufferSize(1024, 1024);
-  firebaseData.setResponseSize(1024);
-  firebaseData.fcm.begin(FIREBASE_FCM_SERVER_KEY);
-  firebaseData.fcm.setPriority("high");
-  firebaseData.fcm.setTopic("Doorbell");
-  firebaseData.fcm.setTimeToLive(5000);
-
-  //Get NTP time
-  timeClient.begin();
-  timeClient.update();
   
   neoTimer.start();
 
-  // check booting status
+  // check booting status IP
   ip = WiFi.localIP();
-  Firebase.setInt(firebaseData, "bellbutton/firstBoot", timeClient.getEpochTime());
-  Firebase.setString(firebaseData, "bellbutton/IPAddress", ip.toString().c_str());
 
 }
 
@@ -73,13 +45,10 @@ void loop() {
   checkButton();
   telnetCommandListener();
 
-  timeClient.update();
-
   if(digitalRead(PIN_TOUCH) == 1){
     if(neoTimer.done()){
       SERIAL.println("Sensor triggered.");
-      firebasePush();
-      sendNotification();
+      runFCM();
       neoTimer.stop();
       neoTimer.start();
     }
@@ -87,53 +56,16 @@ void loop() {
   
 }
 
-
-void sendNotification(){
-  if(disableDoorbell){
-    SERIAL.println("Doorbell disabled!");
-  }else{
-    firebaseData.fcm.addCustomNotifyMessage("title", "Manyaran Sistem");
-    firebaseData.fcm.addCustomNotifyMessage("body", "Seseorang mengunjungi rumah anda (" + timeClient.getFormattedTime() + ").");
-    firebaseData.fcm.addCustomNotifyMessage("sound", "notification.mp3");
-    firebaseData.fcm.addCustomNotifyMessage("android_channel_id", "manyaran_id");
-    firebaseData.fcm.addCustomNotifyMessage("tag", "tag1");
-    firebaseData.fcm.addCustomNotifyMessage("click_action", "FLUTTER_NOTIFICATION_CLICK");
-    SERIAL.println("------------------------------------");
-    SERIAL.println("Send Firebase Cloud Messaging...");
-    if (Firebase.sendTopic(firebaseData)){
-        SERIAL.println("NOTIFICATION PASSED");
-        SERIAL.println(firebaseData.fcm.getSendResult());
-        SERIAL.println("------------------------------------");
-        SERIAL.println();
-    }else{
-        SERIAL.println("NOTIFICATION FAILED");
-        SERIAL.println("REASON: " + firebaseData.errorReason());
-        SERIAL.println("------------------------------------");
-        SERIAL.println();
-     }
-  }
+void runFCM(){
+  WiFiClient client;
+  HTTPClient http;
+  http.begin(SERVER_IP);
+  http.addHeader("Connection", "keep-alive");
+  http.addHeader("secret", "riskiadi");
+  http.GET();
+  http.end();
 }
 
-void firebasePush(){
-  if(disableDoorbell){
-    SERIAL.println("Doorbell disabled!");
-  }else{
-    SERIAL.println("Firebase push visitor data\n");
-    Firebase.setBool(firebaseData, "doorbell/isOn", true);
-    unsigned long epochTime = timeClient.getEpochTime();
-    struct tm *ptm = gmtime ((time_t *)&epochTime);
-    String currentMonth = "";
-    int monthInt = ptm->tm_mon+1;
-    int currentYear = ptm->tm_year+1900;
-    if(monthInt<10){
-      currentMonth = "0" + (String)monthInt;
-    }else{
-      currentMonth = (String)monthInt;
-    }
-    json.set("date", (int)timeClient.getEpochTime());
-    Firebase.pushJSON(firebaseData, "visitors/" + (String)currentYear + "/" + currentMonth , json);
-  }
-}
 
 void setupInitialization(){
   SERIAL.begin(9600);
@@ -190,7 +122,7 @@ void OTASetup(){
 }
 
 void telnetSetup(){
-  SerialAndTelnet.setWelcomeMsg("Welcome to the ESP via TelnetSpy\n");
+  SerialAndTelnet.setWelcomeMsg("Welcome to the [Doorbell ESP] via TelnetSpy\n");
   SerialAndTelnet.setCallbackOnConnect(telnetConnected);
   delay(100); // Wait for serial port
   SERIAL.setDebugOutput(false);
@@ -277,8 +209,6 @@ void telnetConnected() {
   SERIAL.println("Type 'r' for WiFi reconnect.");
   SERIAL.println("Type 'z' for Wifi restart configuration.");
   SERIAL.println("Type 't' for Doorbell testing all.");
-  SERIAL.println("Type 'b' for Doorbell testing only ring.");
-  SERIAL.println("Type 'n' for Doorbell testing only notification.");
   SERIAL.println("Type 'd' for Doorbell disable.");
   SERIAL.println("");
 }
@@ -304,14 +234,7 @@ void telnetCommandListener(){
         ESP.restart();
         break;
       case 't':
-        firebasePush();
-        sendNotification();
-        break;
-      case 'b':
-        firebasePush();
-        break;
-      case 'n':
-        sendNotification();
+        runFCM();
         break;
       case 'd':
         disableDoorbell = !disableDoorbell;
