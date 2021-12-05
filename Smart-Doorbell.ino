@@ -10,8 +10,8 @@
 #include <TelnetSpy.h>  //external library https://github.com/yasheena/telnetspy
 
 //Define
-
-#define SERVER_IP "http://192.168.100.200/fcm_send/"
+#define ENDPOINT_HWINFO "http://192.168.100.200:2021/hwinfo"
+#define ENDPOINT_TRIGGER "http://192.168.100.200:2021/trigger"
 
 #define SERIAL  SerialAndTelnet
 #define TRIGGER_PIN 0 //NODEMCU FLASH BUTTON RESET WIFI AUTH
@@ -33,9 +33,9 @@ void setup() {
   setupInitialization();
   
   neoTimer.start();
-
-  // check booting status IP
-  ip = WiFi.localIP();
+  
+  // send hardware info to db
+  runHwInfo();
 
 }
 
@@ -48,7 +48,7 @@ void loop() {
   if(digitalRead(PIN_TOUCH) == 1){
     if(neoTimer.done()){
       SERIAL.println("Sensor triggered.");
-      runFCM();
+      runTrigger();
       neoTimer.stop();
       neoTimer.start();
     }
@@ -56,16 +56,28 @@ void loop() {
   
 }
 
-void runFCM(){
+void runTrigger(){
   WiFiClient client;
   HTTPClient http;
-  http.begin(SERVER_IP);
+  http.begin(client, ENDPOINT_TRIGGER);
   http.addHeader("Connection", "keep-alive");
-  http.addHeader("secret", "riskiadi");
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("authorization", "riskiadi+");
   http.GET();
   http.end();
 }
 
+void runHwInfo(){
+  ip = WiFi.localIP();
+  WiFiClient client;
+  HTTPClient http;
+  http.begin(client, ENDPOINT_HWINFO);
+  http.addHeader("Connection", "keep-alive");
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("authorization", "riskiadi+");
+  http.POST("{\"type\":\"button\", \"ipAddress\":\"" + ip.toString() + "\"}");
+  http.end();
+}
 
 void setupInitialization(){
   SERIAL.begin(9600);
@@ -208,6 +220,7 @@ void telnetConnected() {
   SERIAL.println("Type 's' for Wifi scan network.");
   SERIAL.println("Type 'r' for WiFi reconnect.");
   SERIAL.println("Type 'z' for Wifi restart configuration.");
+  SERIAL.println("Type 'u' for update hardware information.");
   SERIAL.println("Type 't' for Doorbell testing all.");
   SERIAL.println("Type 'd' for Doorbell disable.");
   SERIAL.println("");
@@ -234,7 +247,7 @@ void telnetCommandListener(){
         ESP.restart();
         break;
       case 't':
-        runFCM();
+        runTrigger();
         break;
       case 'd':
         disableDoorbell = !disableDoorbell;
@@ -243,6 +256,9 @@ void telnetCommandListener(){
         break;
       case 's':
         wifiScanner();
+        break;
+      case 'u':
+        runHwInfo();
         break;
       default:
         SERIAL.println(c);
