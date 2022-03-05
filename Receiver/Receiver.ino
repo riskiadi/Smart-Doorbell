@@ -1,5 +1,4 @@
 #include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266WiFiMulti.h>
 #include <FirebaseESP8266.h>
@@ -17,7 +16,6 @@
 #define FIREBASE_AUTH "vGw7kpq6yTrIjPLVVciDBpqMoZxAkmaERSVRqZWt"
 #define PIN_RELAY D2
 #define PIN_LED_ONE D5
-#define HTTP_REST_PORT 8080
 
 //variables
 IPAddress ip;
@@ -26,7 +24,6 @@ WiFiManager wm;
 TelnetSpy SerialAndTelnet;
 FirebaseData firebaseData;
 FirebaseJson json;
-ESP8266WebServer httpRestServer(HTTP_REST_PORT);
 
 // Define NTP Client to get time
 const long utcOffsetInSeconds = 3600*7; // Time offset GMT+7 in UTC 3600 = 1 hour
