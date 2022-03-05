@@ -30,6 +30,7 @@ class _SettingPageState extends State<SettingPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
         iconTheme: IconThemeData(
           color: Colors.black,
         ),
@@ -110,7 +111,7 @@ class _SettingPageState extends State<SettingPage> {
               ),
             ),
             onTap: () {
-              Navigator.push(context, PageTransition(type: PageTransitionType.rightToLeftWithFade, child: UserListPage()));
+              Navigator.push(context, PageTransition(type: PageTransitionType.fade, child: UserListPage()));
             },
           ),
         ),
@@ -136,7 +137,7 @@ class _SettingPageState extends State<SettingPage> {
                 Navigator.pushAndRemoveUntil(
                     context,
                     PageTransition(
-                        type: PageTransitionType.rightToLeftWithFade,
+                        type: PageTransitionType.fade,
                         child: LoginPage()),
                     (route) => false);
               });

@@ -21,6 +21,7 @@ class _UserListPageState extends State<UserListPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
         iconTheme: IconThemeData(
           color: Colors.black,
         ),
@@ -53,6 +54,7 @@ class _UserListPageState extends State<UserListPage> {
             });
 
             return ListView.separated(
+              physics: BouncingScrollPhysics(),
               itemCount: _userList.length,
               itemBuilder: (context, index) {
                 final item = _userList[index];

@@ -1,10 +1,13 @@
-import 'dart:convert';
-
+import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:manyaran_system/models/counter.dart';
 import 'package:manyaran_system/models/devicestatus.dart';
+import 'package:manyaran_system/models/ip_camera.dart';
+import 'package:manyaran_system/utils/constant.dart';
+
+final firebaseRepository = FirebaseDatabaseRepository();
 
 class FirebaseDatabaseRepository{
 
@@ -21,28 +24,36 @@ class FirebaseDatabaseRepository{
     DateTime dateTime = DateTime.now();
     Map<dynamic, dynamic> visitors;
     DataSnapshot dataSnapshot = await databaseReference.child('visitors').child(dateTime.year.toString()).child(DateFormat("MM").format(dateTime).toString()).once();
-    visitors = dataSnapshot.value;
-    visitors.forEach((key, value) {
-      unixTime = visitors[key]["date"] * 1000;
-      if (dateTime.day == DateTime.fromMillisecondsSinceEpoch(unixTime, isUtc: true,).day &&
-          dateTime.month == DateTime.fromMillisecondsSinceEpoch(unixTime, isUtc: true,) .month &&
-          dateTime.year == DateTime.fromMillisecondsSinceEpoch(unixTime, isUtc: true,).year){
-        visitorCounter++;
-      }
-    });
+
+    if(dataSnapshot.value != null){
+      visitors = dataSnapshot.value;
+      visitors.forEach((key, value) {
+        unixTime = visitors[key]["date"] * 1000;
+        if (dateTime.day == DateTime.fromMillisecondsSinceEpoch(unixTime, isUtc: true,).day &&
+            dateTime.month == DateTime.fromMillisecondsSinceEpoch(unixTime, isUtc: true,) .month &&
+            dateTime.year == DateTime.fromMillisecondsSinceEpoch(unixTime, isUtc: true,).year){
+          visitorCounter++;
+        }
+      });
+    }
+
     return visitorCounter;
   }
 
-  Future <List<int>> getVisitors() async{
+  Future <List<int>> getVisitors({int limit = 0, DateTime? date}) async{
     int unixTime;
-    DateTime dateTime = DateTime.now();
+    DataSnapshot dataSnapshot;
+    DateTime dateTime = date ?? DateTime.now();
     List<int> visitorLog = <int>[];
     Map<dynamic, dynamic> visitors;
-    DataSnapshot dataSnapshot = await databaseReference.child('visitors').child(dateTime.year.toString()).child(DateFormat("MM").format(dateTime).toString()).once();
+
+    if(limit!=0) dataSnapshot = await databaseReference.child('visitors').child(dateTime.year.toString()).child(DateFormat("MM").format(dateTime).toString()).limitToLast(limit).once();
+    else dataSnapshot = await databaseReference.child('visitors').child(dateTime.year.toString()).child(DateFormat("MM").format(dateTime).toString()).once();
+
     if(dataSnapshot.value == null) return visitorLog;
     visitors = dataSnapshot.value;
     visitors.forEach((key, value) {
-      unixTime = visitors[key]["date"] - 25200;
+      unixTime = visitors[key]["date"];
       if (dateTime.month == DateTime.fromMillisecondsSinceEpoch(unixTime*1000).month && dateTime.year == DateTime.fromMillisecondsSinceEpoch(unixTime*1000).year){
         visitorLog.add(unixTime);
       }
@@ -53,7 +64,7 @@ class FirebaseDatabaseRepository{
     return visitorLog;
   }
 
-  Future getBellCounter() async{
+  Future<Counter> getBellCounter() async{
     DateTime dateTime = DateTime.now();
     int totalToday = await getVisitorToday();
     int totalMonth = 0;
@@ -61,7 +72,6 @@ class FirebaseDatabaseRepository{
     Map<dynamic, dynamic> anualVisitor;
     DataSnapshot dataSnapshotMonth = await databaseReference.child('visitors').child(dateTime.year.toString()).once();
     anualVisitor = dataSnapshotMonth.value;
-
     if(anualVisitor[DateFormat("MM").format(dateTime).toString()] != null){
       anualVisitor[DateFormat("MM").format(dateTime).toString()].forEach((key, value) {
         totalMonth++;
@@ -73,6 +83,7 @@ class FirebaseDatabaseRepository{
         totalYear++;
       });
     });
+
     return Counter(todayCount: totalToday, monthCount: totalMonth, yearCount: totalYear);
   }
 
@@ -87,6 +98,75 @@ class FirebaseDatabaseRepository{
       buttonIP: snapshotButtonIP.value ,
       bellIP: snapshotBellIP.value,
     );
+  }
+
+  Future<bool> getLastCamSnapshot() async{
+    var url = Uri.parse(GETCAMERALASTSNAP);
+    await http.get(
+      url,
+      headers: {
+        'authorization': SECRET
+      },
+    );
+    return true;
+  }
+
+  Future<bool> _getCameraStatus() async{
+    var url = Uri.parse(GETCAMERASTATUS);
+    var status = await http.get(
+      url,
+      headers: {'authorization': SECRET},
+    );
+    return true;
+  }
+
+  Future<List<IPCamera>> getIPCamera() async{
+    List<IPCamera> objects = [];
+    if(await _getCameraStatus()){
+      DataSnapshot snapshot = await databaseReference
+          .child('app')
+          .child('information')
+          .child('camera')
+          .once();
+      List<Object?> ipCameraObjects = snapshot.value;
+      ipCameraObjects.forEach((element) {
+        objects.add(IPCamera.fromJson(element));
+      });
+    }
+    return objects;
+  }
+
+  Future setIPCamera(String ipInternet,String ipLocal, String name, {int? index}) async{
+    if(index != null){
+      await databaseReference.child('app/information/camera/$index').update({
+        "ip_internet": ipInternet,
+        "ip_local": ipLocal,
+        "name": name,
+      });
+    }else{
+      DataSnapshot getChild = await databaseReference.child('app/information/camera').once();
+      if(getChild.value != null){
+        int lastIndex = (getChild.value as List).length;
+        await databaseReference.child('app/information/camera/$lastIndex').set({
+          "ip_internet": ipInternet,
+          "ip_local": ipLocal,
+          "is_online":false,
+          "name": name,
+        });
+      }else{
+        await databaseReference.child('app/information/camera/0').set({
+          "ip_internet": ipInternet,
+          "ip_local": ipLocal,
+          "is_online":false,
+          "name": name,
+        });
+      }
+
+    }
+  }
+
+  Future deleteIPCamera(int index) async{
+    await databaseReference.child('app/information/camera/$index').remove();
   }
 
   Future setAlarmOn() async{

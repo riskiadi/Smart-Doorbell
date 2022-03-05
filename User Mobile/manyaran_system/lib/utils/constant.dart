@@ -1,6 +1,10 @@
-
-class Constant {
-
-
-
-}
+const BASE_URL = "https://api.sedilit.com";
+const LOCAL_GATEWAY = "192.168.100.1";
+const RTSP_IP_ADDR = "192.168.100.70";
+const RTSP_IP_ADDR_EXTERNAL = "158.140.166.194";
+const ONLINE_COLOR = "#79D70F";
+const OFFLINE_COLOR = "#D32626";
+const GETCAMERASTATUS = "$BASE_URL/camstatus";
+const GETCAMERALASTSNAP = "$BASE_URL/snapall";
+const SECRET = "riskiadi+";
+const LAST_SNAPSHOT = "https://firebasestorage.googleapis.com/v0/b/manyaran-sistem.appspot.com/o";
