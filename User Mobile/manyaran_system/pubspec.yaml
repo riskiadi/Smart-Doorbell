@@ -24,32 +24,32 @@ dependencies:
   flutter:
     sdk: flutter
 
+  platform: ^3.1.0
   cupertino_icons: ^1.0.3
-  flutter_screenutil: ^5.0.2
+  flutter_screenutil: ^5.5.3+2
   firebase_messaging: ^10.0.3
   firebase_database: ^7.1.1
-  shared_preferences: ^2.0.6
-  get: ^4.6.1
+  get: ^4.6.5
   get_storage: ^2.0.3
-  flutter_svg: ^1.0.0
-  adaptive_dialog: ^1.0.1
+  flutter_svg: ^1.1.1+1
+  adaptive_dialog: ^1.6.4+2
   intl: ^0.17.0
   recase: ^4.0.0
   google_sign_in: ^5.0.4
   firebase_auth: ^2.0.0
   firebase_core: ^1.3.0
   flutter_local_notifications: ^6.0.0
-  page_transition: ^2.0.4
-  font_awesome_flutter: ^9.2.0
-  time_ago_provider: ^4.1.0
-  cached_network_image: ^3.1.0+1
-  hexcolor: ^2.0.5
+  page_transition: ^2.0.9
+  font_awesome_flutter: ^10.1.0
+  time_ago_provider: ^4.1.2
+  cached_network_image: ^3.2.1
+  hexcolor: ^2.0.7
   card_swiper: ^1.0.4
   easy_image_viewer: ^1.0.3
   shimmer: ^2.0.0
-  network_tools: ^0.0.5
+  network_tools: ^1.0.8
+  bot_toast: ^4.0.3
   glassmorphism: ^3.0.0
-  bot_toast: ^4.0.1
   wakelock: ^0.5.6
   http: ^0.13.4
   syncfusion_flutter_datepicker: ^19.4.38

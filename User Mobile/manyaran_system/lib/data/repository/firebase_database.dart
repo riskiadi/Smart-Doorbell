@@ -2,12 +2,10 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
-import 'package:manyaran_system/models/counter.dart';
-import 'package:manyaran_system/models/devicestatus.dart';
-import 'package:manyaran_system/models/ip_camera.dart';
+import 'package:manyaran_system/data/models/counter.dart';
+import 'package:manyaran_system/data/models/devicestatus.dart';
+import 'package:manyaran_system/data/models/ip_camera.dart';
 import 'package:manyaran_system/utils/constant.dart';
-
-final firebaseRepository = FirebaseDatabaseRepository();
 
 class FirebaseDatabaseRepository{
 
@@ -167,6 +165,22 @@ class FirebaseDatabaseRepository{
 
   Future deleteIPCamera(int index) async{
     await databaseReference.child('app/information/camera/$index').remove();
+  }
+
+  Future onStreamIPCamera(int duration) async{
+    var url = Uri.parse(ONSTREAMCAM);
+    var status = await http.post(
+      url,
+      headers: {'authorization': SECRET},
+      body: {
+        'duration': duration,
+      }
+    );
+    return true;
+  }
+
+  Future offStreamIPCamera() async{
+    // https://api.sedilit.com/onstream
   }
 
   Future setAlarmOn() async{

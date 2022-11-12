@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:manyaran_system/ui/home/widgets/visitor_list_widget.dart';
-import 'package:manyaran_system/ui/view_all_visitor/view_all_visitor.dart';
+import 'package:manyaran_system/ui/view_all_visitor/view_all_visitor_page.dart';
 import 'package:page_transition/page_transition.dart';
 
 class VisitorsRecordsWidget extends StatelessWidget {

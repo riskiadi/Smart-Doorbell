@@ -1,15 +1,14 @@
 import 'package:bot_toast/bot_toast.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:glassmorphism/glassmorphism.dart';
+import 'package:get/get.dart';
 import 'package:hexcolor/hexcolor.dart';
-import 'package:manyaran_system/models/ip_camera.dart';
-import 'package:manyaran_system/ui/cam_stream/cam_stream.dart';
+import 'package:manyaran_system/controller/home_controller.dart';
+import 'package:manyaran_system/data/models/ip_camera.dart';
+import 'package:manyaran_system/routes/app_routes.dart';
 import 'package:manyaran_system/utils/constant.dart';
 import 'package:manyaran_system/utils/helper.dart';
 
-class IpCamPreviewWidget extends StatelessWidget {
+class IpCamPreviewWidget extends GetView<HomeController> {
   final bool isUsingLocalConnection;
   final List<IPCamera>? ipCamList;
 
@@ -30,24 +29,22 @@ class IpCamPreviewWidget extends StatelessWidget {
             itemBuilder: (context, index){
               return GestureDetector(
                 onTap: () {
+
                   BotToast.showLoading();
+
                   isLocalConnection().then((isLocal){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CamStreamPage(
-                          indexPosition: index,
-                          ipAddress: isLocal ?  "${ipCamList?[index].ipLocal}" : "${ipCamList?[index].ipInternet}",
-                        ),
-                      ),
-                    );
+
+                    Get.toNamed(Routes.CAM_STREAM, arguments: [index, isLocal ?  "${ipCamList?[index].ipLocal}" : "${ipCamList?[index].ipInternet}"]);
+
                     BotToast.closeAllLoading();
                     BotToast.showSimpleNotification(
                       title: "Using ${isLocal ? "local" : "internet"} connection.",
                       duration: Duration(seconds: 10),
                       align: Alignment.bottomCenter,
                     );
+
                   });
+
                 },
                 child: Padding(
                   padding: EdgeInsets.only(left: index==0 ? 35:10 , right: index== ipCamList!.length-1 ? 35:10,),

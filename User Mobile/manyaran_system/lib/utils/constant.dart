@@ -6,5 +6,6 @@ const ONLINE_COLOR = "#79D70F";
 const OFFLINE_COLOR = "#D32626";
 const GETCAMERASTATUS = "$BASE_URL/camstatus";
 const GETCAMERALASTSNAP = "$BASE_URL/snapall";
+const ONSTREAMCAM = "$BASE_URL/onstream";
 const SECRET = "riskiadi+";
 const LAST_SNAPSHOT = "https://firebasestorage.googleapis.com/v0/b/manyaran-sistem.appspot.com/o";

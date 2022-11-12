@@ -1,11 +1,17 @@
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:hexcolor/hexcolor.dart';
+import 'package:manyaran_system/data/repository/firebase_database.dart';
 import 'package:network_tools/network_tools.dart';
 import 'constant.dart';
 
 final getStorage = GetStorage();
+final firebaseRepository = FirebaseDatabaseRepository();
+User? user = FirebaseAuth.instance.currentUser;
 
 extension DateOnlyCompare on DateTime {
   bool isSameDay(DateTime other) {
@@ -19,14 +25,18 @@ HexColor darkTextColor = HexColor("#1F2E45");
 
 Future<bool> isLocalConnection() async{
   OpenPort isUsingLocalConnection = await PortScanner.isOpen(LOCAL_GATEWAY, 80, timeout: Duration(seconds: 3));
-  if(isUsingLocalConnection.isOpen){
-    OpenPort isHaveIpCam = await PortScanner.isOpen(RTSP_IP_ADDR, 554, timeout: Duration(seconds: 3));
-    return isHaveIpCam.isOpen;
-  }else{
-    OpenPort isLocalConnection = await PortScanner.isOpen(RTSP_IP_ADDR, 554);
-    OpenPort isHaveIpCam = await PortScanner.isOpen(RTSP_IP_ADDR, 554, timeout: Duration(seconds: 3));
-    return isHaveIpCam.isOpen;
-  }
+
+  return isUsingLocalConnection.isOpen;
+
+  // if(isUsingLocalConnection.isOpen){
+  //   OpenPort isHaveIpCam = await PortScanner.isOpen(RTSP_IP_ADDR, 554, timeout: Duration(seconds: 3));
+  //   return isHaveIpCam.isOpen;
+  // }else{
+  //   OpenPort isLocalConnection = await PortScanner.isOpen(RTSP_IP_ADDR, 554);
+  //   OpenPort isHaveIpCam = await PortScanner.isOpen(RTSP_IP_ADDR, 554, timeout: Duration(seconds: 3));
+  //   return isHaveIpCam.isOpen;
+  // }
+
 }
 
 camIsOnline(String ipcamera) async{
@@ -35,5 +45,16 @@ camIsOnline(String ipcamera) async{
 }
 
 toastS(String title){
-  BotToast.showSimpleNotification(title: title, titleStyle: TextStyle(color: Colors.white), duration: Duration(seconds: 4), backgroundColor: Colors.indigo,);
+  BotToast.showSimpleNotification(title: title, titleStyle: TextStyle(color: Colors.white), duration: Duration(seconds: 4), backgroundColor: Colors.indigo, align: Alignment.bottomCenter);
+}
+
+showOkDialog(BuildContext context, { String title = "Title", String message = "Message" }){
+  showAlertDialog<OkCancelResult>(
+      context: context,
+      title: title,
+      message: message,
+      style: AdaptiveStyle.iOS,
+      actions: [
+        AlertDialogAction(label: "OK", key: OkCancelResult.cancel)
+      ]);
 }

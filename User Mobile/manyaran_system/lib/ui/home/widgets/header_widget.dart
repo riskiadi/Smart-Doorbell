@@ -3,7 +3,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:manyaran_system/repository/firebase_database.dart';
+import 'package:get/get.dart';
+import 'package:manyaran_system/data/models/devicestatus.dart';
+import 'package:manyaran_system/data/repository/firebase_database.dart';
+import 'package:manyaran_system/routes/app_routes.dart';
 import 'package:time_ago_provider/time_ago_provider.dart' as timeAgo;
 import 'package:page_transition/page_transition.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,8 +14,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
-import 'package:manyaran_system/models/devicestatus.dart';
-import 'package:manyaran_system/ui/setting/setting.dart';
+import 'package:manyaran_system/ui/setting/setting_page.dart';
 
 class HeaderWidget extends StatelessWidget {
   final User? user;
@@ -200,18 +202,8 @@ class HeaderWidget extends StatelessWidget {
             ),
           ),
           InkWell(
-            child: FaIcon(FontAwesomeIcons.cog, color: Colors.black.withOpacity(0.65),),
-            onTap: () {
-              Navigator.push(
-                context,
-                PageTransition(
-                  type: PageTransitionType.fade,
-                  child: SettingPage(
-                    user: user,
-                  ),
-                ),
-              );
-            },
+            child: FaIcon(FontAwesomeIcons.gear, color: Colors.black.withOpacity(0.65),),
+            onTap: () => Get.toNamed(Routes.SETTING),
           ),
         ],
       ),

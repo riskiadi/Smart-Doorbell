@@ -5,7 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
-import 'package:manyaran_system/models/counter.dart';
+import 'package:manyaran_system/data/models/counter.dart';
 
 class InfoWidget extends StatelessWidget {
   final Counter? counter;
