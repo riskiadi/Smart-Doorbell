@@ -53,6 +53,14 @@ class UserListController extends GetxController {
       ));
     });
 
+    userList.sort((a,b){
+      if(a.access == true){
+        return -1;
+      }else{
+       return 1;
+      }
+    });
+
     isLoading = RxStatus.success();
 
   }

@@ -10,11 +10,18 @@ import 'package:manyaran_system/utils/helper.dart';
 class LoginController extends GetxController {
 
   final _firebaseDatabaseRepository = FirebaseDatabaseRepository().obs;
+  final _appVersion = RxnString();
 
   get firebaseDatabaseRepository => this._firebaseDatabaseRepository.value;
 
   set firebaseDatabaseRepository(value) {
     this._firebaseDatabaseRepository.value = value;
+  }
+
+  String? get appVersion => _appVersion.value;
+
+  set appVersion(value) {
+    _appVersion.value = value;
   }
 
   signInWithGoogle() async {
@@ -47,6 +54,12 @@ class LoginController extends GetxController {
       firebaseAuth.signOut();
       GoogleSignIn().disconnect();
     }
+  }
+
+  @override
+  void onInit() {
+    packageInfo().then((value) => appVersion = value.version);
+    super.onInit();
   }
 
 }

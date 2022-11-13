@@ -1,7 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:manyaran_system/controller/login_controller.dart';
 import 'package:get/get.dart';
+import 'package:manyaran_system/utils/helper.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class LoginPage extends GetView<LoginController> {
 
@@ -80,6 +83,11 @@ class LoginPage extends GetView<LoginController> {
                   ],
                 ),
               ),
+              Positioned(
+                  bottom: 20,
+                  left: 0.5,
+                  right: 0.5,
+                  child: Center(child: Text("Version ${_controller.appVersion}", style: TextStyle(fontSize: 12.sp),),),),
             ],
           ),
         ),

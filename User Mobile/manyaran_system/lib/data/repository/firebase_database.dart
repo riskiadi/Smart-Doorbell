@@ -120,46 +120,44 @@ class FirebaseDatabaseRepository{
 
   Future<List<IPCamera>> getIPCamera() async{
     List<IPCamera> objects = [];
-    if(await _getCameraStatus()){
-      DataSnapshot snapshot = await databaseReference
-          .child('app')
-          .child('information')
-          .child('camera')
-          .once();
-      List<Object?> ipCameraObjects = snapshot.value;
-      ipCameraObjects.forEach((element) {
-        objects.add(IPCamera.fromJson(element));
-      });
-    }
+    // if(await _getCameraStatus()){
+    //   DataSnapshot snapshot = await databaseReference
+    //       .child('app')
+    //       .child('information')
+    //       .child('camera')
+    //       .once();
+    //   List<Object?> ipCameraObjects = snapshot.value;
+    //   ipCameraObjects.forEach((element) {
+    //     objects.add(IPCamera.fromJson(element));
+    //   });
+    // }
+
+    DataSnapshot snapshot = await databaseReference
+        .child('app')
+        .child('information')
+        .child('camera')
+        .once();
+    List<Object?> ipCameraObjects = snapshot.value;
+    ipCameraObjects.forEach((element) {
+      objects.add(IPCamera.fromJson(element));
+    });
     return objects;
   }
 
-  Future setIPCamera(String ipInternet,String ipLocal, String name, {int? index}) async{
-    if(index != null){
-      await databaseReference.child('app/information/camera/$index').update({
+  Future setIPCamera(String ipInternet,String ipLocal, String name, {String? editedKey}) async{
+    if(editedKey != null){
+      await databaseReference.child('app/information/camera/$editedKey').update({
         "ip_internet": ipInternet,
         "ip_local": ipLocal,
         "name": name,
       });
     }else{
-      DataSnapshot getChild = await databaseReference.child('app/information/camera').once();
-      if(getChild.value != null){
-        int lastIndex = (getChild.value as List).length;
-        await databaseReference.child('app/information/camera/$lastIndex').set({
-          "ip_internet": ipInternet,
-          "ip_local": ipLocal,
-          "is_online":false,
-          "name": name,
-        });
-      }else{
-        await databaseReference.child('app/information/camera/0').set({
-          "ip_internet": ipInternet,
-          "ip_local": ipLocal,
-          "is_online":false,
-          "name": name,
-        });
-      }
-
+      await databaseReference.child('app/information/camera').push().set({
+        "ip_internet": ipInternet,
+        "ip_local": ipLocal,
+        "is_online":false,
+        "name": name
+      });
     }
   }
 

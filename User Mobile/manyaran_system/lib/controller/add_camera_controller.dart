@@ -8,7 +8,7 @@ class AddCameraController extends GetxController with StateMixin{
   final _nameC = TextEditingController().obs;
   final _ipLocalC = TextEditingController().obs;
   final _ipInternetC = TextEditingController().obs;
-  final _editedIndex = RxnInt();
+  final _editedId = RxnString();
 
   TextEditingController get nameC => this._nameC.value;
 
@@ -28,14 +28,14 @@ class AddCameraController extends GetxController with StateMixin{
     this._ipInternetC.value = value;
   }
 
-  int? get editedIndex => this._editedIndex.value;
+  String? get editedKey => this._editedId.value;
 
-  set editedIndex(value) {
-    this._editedIndex.value = value;
+  set editedKey(value) {
+    this._editedId.value = value;
   }
 
-  clearInputs(){
-    editedIndex = null;
+  _clearInputs(){
+    editedKey = null;
     nameC.text = "";
     ipLocalC.text = "";
     ipInternetC.text = "";
@@ -80,7 +80,7 @@ class AddCameraController extends GetxController with StateMixin{
                 nameC.text = title;
                 ipLocalC.text = ipLocal;
                 ipInternetC.text = ipPublic;
-                editedIndex = index;
+                editedKey = index;
                 Get.back();
               },
             ),
@@ -89,6 +89,16 @@ class AddCameraController extends GetxController with StateMixin{
       });
     }
 
+  }
+
+  addCamera({String? editedKey}) async{
+    if(editedKey!=null){
+      await firebaseRepository.setIPCamera(ipInternetC.text, ipLocalC.text, nameC.text, id: editedKey);
+    }else{
+      await firebaseRepository.setIPCamera(ipInternetC.text, ipLocalC.text, nameC.text);
+    }
+    _clearInputs();
+    toastS("Camera added successfully!");
   }
 
 }

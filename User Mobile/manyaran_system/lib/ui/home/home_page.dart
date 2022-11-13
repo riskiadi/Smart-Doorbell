@@ -123,8 +123,7 @@ class HomePage extends GetView<HomeController> {
                           future: firebaseRepository.getIPCamera(),
                           builder: (context,
                               AsyncSnapshot<List<IPCamera>> snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
                               return SkeletonContainerWidget(height: 90,);
                             }
                             if (snapshot.hasData) {
@@ -136,8 +135,7 @@ class HomePage extends GetView<HomeController> {
                                 padding: const EdgeInsets.symmetric(
                                     vertical: 20),
                                 child: Center(
-                                  child: Text(
-                                      "You haven't added a camera yet."),
+                                  child: EmptyContentWidget(title: "You haven't added a camera yet."),
                                 ),
                               );
                             }
@@ -176,7 +174,7 @@ class HomePage extends GetView<HomeController> {
                             if (snapshot.hasData) {
                               List<int>? visitorLog = snapshot.data;
                               if (visitorLog!.length <= 0)
-                                return EmptyVisitorWidget();
+                                return EmptyContentWidget(title: "No recent photos were captured.",);
                               return LastCapturedVisitorWidget(
                                 visitorLog: visitorLog,
                               );
@@ -241,7 +239,7 @@ class HomePage extends GetView<HomeController> {
                             if (snapshot.hasData) {
                               List<int>? visitorLog = snapshot.data;
                               if (visitorLog!.length <= 0)
-                                return EmptyVisitorWidget();
+                                return EmptyContentWidget(title: "You have no visitors this month.",);
                               return VisitorsRecordsWidget(
                                 visitorLog: visitorLog,
                               );

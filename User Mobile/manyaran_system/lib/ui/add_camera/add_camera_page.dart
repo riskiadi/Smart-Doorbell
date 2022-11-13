@@ -78,28 +78,18 @@ class AddCameraPage extends GetView<AddCameraController> {
                           ),
                         ),
                         SizedBox(width: 15),
-                        _.editedIndex != null ?
+                        _.editedKey != null ?
                         IconButton(
                           icon: FaIcon(
                             FontAwesomeIcons.check, color: Colors.black,
                             size: 18,),
-                          onPressed: () {
-                            firebaseRepository.setIPCamera(_.ipInternetC.text, _.ipLocalC.text, _.nameC.text, index: _.editedIndex).then((value) {
-                              _.clearInputs();
-                              toastS("Update success!");
-                            });
-                          },
+                          onPressed: ()=>_.addCamera(editedKey: _.editedKey),
                         ) :
                         IconButton(
                           icon: FaIcon(
                             FontAwesomeIcons.plus, color: Colors.black,
                             size: 18,),
-                          onPressed: () {
-                            firebaseRepository.setIPCamera(_.ipInternetC.text, _.ipLocalC.text, _.nameC.text).then((value) {
-                              _.clearInputs();
-                              toastS("Camera added successfully!");
-                            });
-                          },
+                          onPressed: ()=> _.addCamera(),
                         ),
                       ],
                     ),

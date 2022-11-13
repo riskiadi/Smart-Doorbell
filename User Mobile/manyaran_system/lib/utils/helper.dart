@@ -1,12 +1,12 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:manyaran_system/data/repository/firebase_database.dart';
 import 'package:network_tools/network_tools.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'constant.dart';
 
 final getStorage = GetStorage();
@@ -24,9 +24,8 @@ extension DateOnlyCompare on DateTime {
 HexColor darkTextColor = HexColor("#1F2E45");
 
 Future<bool> isLocalConnection() async{
-  OpenPort isUsingLocalConnection = await PortScanner.isOpen(LOCAL_GATEWAY, 80, timeout: Duration(seconds: 3));
-
-  return isUsingLocalConnection.isOpen;
+  var isUsingLocalConnection = await PortScanner.isOpen(LOCAL_GATEWAY, 80, timeout: Duration(seconds: 3));
+  return isUsingLocalConnection?.openPort.isNotEmpty ?? false;
 
   // if(isUsingLocalConnection.isOpen){
   //   OpenPort isHaveIpCam = await PortScanner.isOpen(RTSP_IP_ADDR, 554, timeout: Duration(seconds: 3));
@@ -39,9 +38,11 @@ Future<bool> isLocalConnection() async{
 
 }
 
+Future<PackageInfo> packageInfo()async => await PackageInfo.fromPlatform();
+
 camIsOnline(String ipcamera) async{
-  OpenPort isLocalConnection = await PortScanner.isOpen(ipcamera, 554);
-  return isLocalConnection.isOpen;
+  var isLocalConnection = await PortScanner.isOpen(ipcamera, 554);
+  return isLocalConnection?.openPort.isNotEmpty ?? false;
 }
 
 toastS(String title){
